@@ -30,15 +30,15 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { fetchPromptLibrary } from "@/lib/api";
+import { fetchPromptLibrary, type PromptLibraryItem } from "@/lib/api";
 import type { ImageConversationMode } from "@/store/image-conversations";
 import { cn } from "@/lib/utils";
 
 const BANANA_PROMPTS_SNAPSHOT_VERSION = "2026-05-27-sfw";
 const BANANA_PROMPTS_URL = `/banana-prompt-quicker/prompts.json?v=${BANANA_PROMPTS_SNAPSHOT_VERSION}`;
-const BANANA_PROMPTS_REPO_URL = "https://github.com/glidea/banana-prompt-quicker";
 const BANANA_PROMPTS_ASSET_BASE_URL = "/banana-prompt-quicker/";
 const PROMPT_LIBRARY_API_TIMEOUT_MS = 2200;
+const QUICK_PROMPT_COUNT = 3;
 
 const GLASSES_PROMPT = `
 不知道自己适合佩戴什么样式的眼镜？
@@ -501,19 +501,49 @@ const promptPresetOptions: ImagePromptPreset[] = [
   },
 ];
 
-type BananaPromptItem = {
-  title: string;
-  preview?: string;
-  reference_image_urls?: string[];
-  prompt: string;
-  author?: string;
-  id?: string;
-  link?: string;
-  mode?: string;
-  category?: string;
-  sub_category?: string;
-  created?: string;
+type PromptPickerItem = Omit<PromptLibraryItem, "id"> & { id?: string };
+
+const promptIconMap: Record<string, LucideIcon> = {
+  aperture: Aperture,
+  box: Box,
+  camera: Camera,
+  clapperboard: Clapperboard,
+  glasses: Glasses,
+  newspaper: Newspaper,
+  "notebook-pen": NotebookPen,
+  scissors: Scissors,
+  sparkles: Sparkles,
+  "sun-medium": SunMedium,
+  "wand-sparkles": WandSparkles,
 };
+
+const defaultPromptIconById: Record<string, string> = {
+  glasses: "glasses",
+  hairstyle: "scissors",
+  "natural-beauty": "sparkles",
+  "photo-portrait-v1": "aperture",
+  "photo-portrait-v2": "clapperboard",
+  "cutie-3d-style": "box",
+  "xiaohongshu-poster": "newspaper",
+  "handwritten-notes": "notebook-pen",
+  "photo-enhance": "camera",
+  "backlight-repair": "sun-medium",
+  "detail-restore": "wand-sparkles",
+};
+
+const defaultPromptItems: PromptPickerItem[] = promptPresetOptions.map((preset, index) => ({
+  id: preset.id,
+  title: preset.title,
+  description: preset.description,
+  prompt: preset.prompt,
+  mode: preset.mode,
+  image_size: preset.imageSize || "",
+  image_count: preset.imageCount || "",
+  icon: defaultPromptIconById[preset.id],
+  quick_access: index < QUICK_PROMPT_COUNT,
+  sort_order: (index + 1) * 10,
+  category: "内置快捷",
+}));
 
 type BananaPromptStatus = "idle" | "loading" | "success" | "error";
 
@@ -529,7 +559,7 @@ function getPromptModeLabel(value?: string) {
   return normalizePromptMode(value) === "edit" ? "图生图" : "文生图";
 }
 
-function summarizeBananaPrompt(item: BananaPromptItem) {
+function summarizeBananaPrompt(item: PromptPickerItem) {
   const cleaned = item.prompt
     .replace(/```[\s\S]*?```/g, " ")
     .replace(/https?:\/\/\S+/g, " ")
@@ -550,11 +580,11 @@ function summarizeBananaPrompt(item: BananaPromptItem) {
   return firstSentence.length > 86 ? `${firstSentence.slice(0, 86)}...` : firstSentence;
 }
 
-function getPromptCategoryLabel(item: BananaPromptItem) {
+function getPromptCategoryLabel(item: PromptPickerItem) {
   return [item.category, item.sub_category].filter(Boolean).join(" / ") || "未分类";
 }
 
-function getBananaPromptPreviewUrl(item: BananaPromptItem) {
+function getBananaPromptPreviewUrl(item: PromptPickerItem) {
   const candidate = item.preview || item.reference_image_urls?.[0];
   if (!candidate) {
     return "";
@@ -588,6 +618,41 @@ function normalizeBananaPromptsPayload(payload: unknown) {
   return maybeItems.filter(isBananaPromptItem);
 }
 
+function getPromptItemKey(item: PromptPickerItem, index = 0) {
+  return item.id || `${item.title}-${item.created || item.prompt.slice(0, 32)}-${index}`;
+}
+
+function getPromptSortOrder(item: PromptPickerItem, index: number) {
+  return typeof item.sort_order === "number" ? item.sort_order : 10000 + index;
+}
+
+function mergePromptItems(primaryItems: PromptPickerItem[], secondaryItems: PromptPickerItem[]) {
+  const secondaryById = new Map(secondaryItems.filter((item) => item.id).map((item) => [item.id, item]));
+  const merged = primaryItems.map((item) => (item.id && secondaryById.has(item.id) ? secondaryById.get(item.id)! : item));
+  const seen = new Set(merged.map((item, index) => getPromptItemKey(item, index)));
+  secondaryItems.forEach((item, index) => {
+    const key = getPromptItemKey(item, index);
+    if (!seen.has(key)) {
+      seen.add(key);
+      merged.push(item);
+    }
+  });
+  return merged;
+}
+
+function sortPromptItems(items: PromptPickerItem[]) {
+  return [...items].sort((a, b) => getPromptSortOrder(a, 0) - getPromptSortOrder(b, 0));
+}
+
+function getPromptIcon(item: PromptPickerItem) {
+  const iconKey = item.icon || (item.id ? defaultPromptIconById[item.id] : "");
+  return promptIconMap[iconKey || ""] || Images;
+}
+
+function getPromptDescription(item: PromptPickerItem) {
+  return item.description || summarizeBananaPrompt(item);
+}
+
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number) {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<T>((_, reject) => {
@@ -600,11 +665,11 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number) {
   });
 }
 
-function isBananaPromptItem(value: unknown): value is BananaPromptItem {
+function isBananaPromptItem(value: unknown): value is PromptPickerItem {
   if (!value || typeof value !== "object") {
     return false;
   }
-  const item = value as Partial<BananaPromptItem>;
+  const item = value as Partial<PromptPickerItem>;
   return typeof item.title === "string" && typeof item.prompt === "string";
 }
 
@@ -653,7 +718,7 @@ export function ImageComposer({
   const [isPromptLibraryOpen, setIsPromptLibraryOpen] = useState(false);
   const [bananaPromptStatus, setBananaPromptStatus] = useState<BananaPromptStatus>("idle");
   const [bananaPromptError, setBananaPromptError] = useState("");
-  const [bananaPrompts, setBananaPrompts] = useState<BananaPromptItem[]>([]);
+  const [bananaPrompts, setBananaPrompts] = useState<PromptPickerItem[]>(defaultPromptItems);
   const [bananaPromptQuery, setBananaPromptQuery] = useState("");
   const [bananaPromptCategory, setBananaPromptCategory] = useState("全部");
   const [bananaPromptRetryKey, setBananaPromptRetryKey] = useState(0);
@@ -671,14 +736,30 @@ export function ImageComposer({
     { value: "9:16", label: "9:16 (竖版)" },
   ];
   const imageSizeLabel = imageSizeOptions.find((option) => option.value === imageSize)?.label || "未指定";
-  const activePresetId = promptPresetOptions.find((preset) => preset.prompt === prompt)?.id;
-  const bananaPromptCategories = useMemo(() => {
-    const categories = Array.from(new Set(bananaPrompts.map(getPromptCategoryLabel))).sort((a, b) => a.localeCompare(b, "zh-CN"));
-    return ["全部", ...categories];
+  const quickPromptItems = useMemo(() => {
+    const selected = sortPromptItems(bananaPrompts.filter((item) => item.quick_access)).slice(0, QUICK_PROMPT_COUNT);
+    if (selected.length >= QUICK_PROMPT_COUNT) {
+      return selected;
+    }
+    const selectedIds = new Set(selected.map((item) => item.id).filter(Boolean));
+    const fallbackItems = defaultPromptItems
+      .filter((item) => item.quick_access && (!item.id || !selectedIds.has(item.id)))
+      .slice(0, QUICK_PROMPT_COUNT - selected.length);
+    return [...selected, ...fallbackItems];
   }, [bananaPrompts]);
+  const quickPromptKeys = useMemo(() => new Set(quickPromptItems.map((item, index) => getPromptItemKey(item, index))), [quickPromptItems]);
+  const morePromptItems = useMemo(
+    () => bananaPrompts.filter((item, index) => !quickPromptKeys.has(getPromptItemKey(item, index))),
+    [bananaPrompts, quickPromptKeys],
+  );
+  const activePresetId = quickPromptItems.find((item) => item.prompt === prompt)?.id;
+  const bananaPromptCategories = useMemo(() => {
+    const categories = Array.from(new Set(morePromptItems.map(getPromptCategoryLabel))).sort((a, b) => a.localeCompare(b, "zh-CN"));
+    return ["全部", ...categories];
+  }, [morePromptItems]);
   const filteredBananaPrompts = useMemo(() => {
     const query = bananaPromptQuery.trim().toLowerCase();
-    return bananaPrompts.filter((item) => {
+    return morePromptItems.filter((item) => {
       const categoryLabel = getPromptCategoryLabel(item);
       const matchesCategory = bananaPromptCategory === "全部" || categoryLabel === bananaPromptCategory;
       if (!matchesCategory) {
@@ -687,47 +768,38 @@ export function ImageComposer({
       if (!query) {
         return true;
       }
-      return [item.title, item.prompt, item.category, item.sub_category, item.author]
+      return [item.title, item.description, item.prompt, item.category, item.sub_category, item.author]
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(query));
     });
-  }, [bananaPromptCategory, bananaPromptQuery, bananaPrompts]);
+  }, [bananaPromptCategory, bananaPromptQuery, morePromptItems]);
 
-  const handlePromptPresetSelect = (preset: ImagePromptPreset) => {
-    onModeChange(preset.mode);
-    onPromptChange(preset.prompt);
-    if (preset.imageSize !== undefined) {
-      onImageSizeChange(preset.imageSize);
-    }
-    if (preset.imageCount !== undefined) {
-      onImageCountChange(preset.imageCount);
-    }
-    window.requestAnimationFrame(() => textareaRef.current?.focus());
-  };
-
-  const handleBananaPromptSelect = (item: BananaPromptItem) => {
+  const handleBananaPromptSelect = (item: PromptPickerItem) => {
     onModeChange(normalizePromptMode(item.mode));
     onPromptChange(item.prompt);
-    onImageCountChange("1");
+    if (item.image_size) {
+      onImageSizeChange(item.image_size);
+    }
+    if (item.image_count) {
+      onImageCountChange(item.image_count);
+    }
     setIsPromptLibraryOpen(false);
     window.requestAnimationFrame(() => textareaRef.current?.focus());
   };
 
   useEffect(() => {
-    if (!isPromptLibraryOpen || (bananaPromptStatus === "success" && bananaPrompts.length > 0)) {
-      return;
-    }
-
     const controller = new AbortController();
     const loadBananaPrompts = async () => {
       setBananaPromptStatus("loading");
       setBananaPromptError("");
       try {
-        let items: BananaPromptItem[] = [];
+        let items: PromptPickerItem[] = [];
+        let apiErrorMessage = "";
         try {
           const payload = await withTimeout(fetchPromptLibrary(), PROMPT_LIBRARY_API_TIMEOUT_MS);
           items = normalizeBananaPromptsPayload(payload);
-        } catch {
+        } catch (error) {
+          apiErrorMessage = error instanceof Error ? error.message : "";
           items = [];
         }
         if (items.length === 0) {
@@ -743,7 +815,8 @@ export function ImageComposer({
         if (items.length === 0) {
           throw new Error("未读取到可用提示词");
         }
-        setBananaPrompts(items);
+        setBananaPrompts(sortPromptItems(mergePromptItems(defaultPromptItems, items)));
+        setBananaPromptError(apiErrorMessage);
         setBananaPromptStatus("success");
       } catch (error) {
         if (controller.signal.aborted) {
@@ -751,6 +824,7 @@ export function ImageComposer({
         }
         const message = error instanceof Error ? error.message : "提示词加载失败";
         setBananaPromptError(message);
+        setBananaPrompts(defaultPromptItems);
         setBananaPromptStatus("error");
       }
     };
@@ -759,7 +833,7 @@ export function ImageComposer({
     return () => {
       controller.abort();
     };
-  }, [bananaPromptRetryKey, bananaPromptStatus, bananaPrompts.length, isPromptLibraryOpen]);
+  }, [bananaPromptRetryKey]);
 
   useEffect(() => {
     if (!isSizeMenuOpen) {
@@ -837,52 +911,51 @@ export function ImageComposer({
           </div>
         ) : null}
 
-        <div className="mb-3 grid gap-2 px-1 sm:grid-cols-2 lg:grid-cols-3">
-          {promptPresetOptions.map((preset) => {
-            const active = preset.id === activePresetId;
-            const PresetIcon = preset.icon;
-            return (
-              <button
-                key={preset.id}
-                type="button"
-                onClick={() => handlePromptPresetSelect(preset)}
-                className={cn(
-                  "flex min-h-16 items-center gap-3 rounded-2xl border px-4 py-3 text-left transition",
-                  active
-                    ? "border-stone-900 bg-stone-950 text-white shadow-sm"
-                    : "border-stone-200 bg-white text-stone-800 hover:border-stone-300 hover:bg-stone-50",
-                )}
-              >
-                <span
+        <div className="mb-3 space-y-2 px-1">
+          <div className="hide-scrollbar flex snap-x gap-2 overflow-x-auto pb-1 sm:grid sm:grid-cols-2 sm:overflow-visible sm:pb-0 lg:grid-cols-3">
+            {quickPromptItems.map((item, index) => {
+              const active = item.id === activePresetId;
+              const PresetIcon = getPromptIcon(item);
+              return (
+                <button
+                  key={getPromptItemKey(item, index)}
+                  type="button"
+                  onClick={() => handleBananaPromptSelect(item)}
                   className={cn(
-                    "inline-flex size-9 shrink-0 items-center justify-center rounded-full",
-                    active ? "bg-white/15 text-white" : "bg-stone-100 text-stone-600",
+                    "flex min-h-14 w-[min(76vw,300px)] shrink-0 snap-start items-center gap-2.5 rounded-2xl border px-3 py-2.5 text-left transition sm:min-h-16 sm:w-auto sm:shrink sm:gap-3 sm:px-4 sm:py-3",
+                    active
+                      ? "border-stone-900 bg-stone-950 text-white shadow-sm"
+                      : "border-stone-200 bg-white text-stone-800 hover:border-stone-300 hover:bg-stone-50",
                   )}
                 >
-                  <PresetIcon className="size-4" />
-                </span>
-                <span className="min-w-0">
-                  <span className="block truncate text-sm font-semibold">{preset.title}</span>
-                  <span className={cn("mt-0.5 block truncate text-xs", active ? "text-white/70" : "text-stone-500")}>
-                    {preset.description}
+                  <span
+                    className={cn(
+                      "inline-flex size-8 shrink-0 items-center justify-center rounded-full sm:size-9",
+                      active ? "bg-white/15 text-white" : "bg-stone-100 text-stone-600",
+                    )}
+                  >
+                    <PresetIcon className="size-4" />
                   </span>
-                </span>
-              </button>
-            );
-          })}
-          <button
-            type="button"
-            onClick={() => setIsPromptLibraryOpen(true)}
-            className="flex min-h-16 items-center gap-3 rounded-2xl border border-dashed border-stone-300 bg-white px-4 py-3 text-left text-stone-800 transition hover:border-stone-400 hover:bg-stone-50"
-          >
-            <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-stone-100 text-stone-600">
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-semibold">{item.title}</span>
+                    <span className={cn("mt-0.5 block truncate text-xs", active ? "text-white/70" : "text-stone-500")}>
+                      {getPromptDescription(item)}
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={() => setIsPromptLibraryOpen(true)}
+              className="inline-flex h-9 items-center gap-2 rounded-full border border-stone-200 bg-white px-3 text-sm font-medium text-stone-700 transition hover:border-stone-300 hover:bg-stone-50"
+            >
               <Images className="size-4" />
-            </span>
-            <span className="min-w-0">
-              <span className="block truncate text-sm font-semibold">更多提示词</span>
-              <span className="mt-0.5 block truncate text-xs text-stone-500">来自 banana-prompt-quicker 示例库</span>
-            </span>
-          </button>
+              更多提示词
+            </button>
+          </div>
         </div>
 
         <Dialog open={isPromptLibraryOpen} onOpenChange={setIsPromptLibraryOpen}>
@@ -892,7 +965,7 @@ export function ImageComposer({
                 <div className="min-w-0">
                   <DialogTitle className="text-xl font-semibold text-stone-950">更多提示词</DialogTitle>
                   <DialogDescription className="mt-2 leading-6 text-stone-500">
-                    本地内置 glidea/banana-prompt-quicker 快照{bananaPrompts.length > 0 ? `，已加载 ${bananaPrompts.length} 条` : ""}
+                    来自提示词管理{morePromptItems.length > 0 ? `，已加载 ${morePromptItems.length} 条` : ""}
                     ，点击使用会填入提示词并自动切换文生图或图生图模式。
                   </DialogDescription>
                 </div>
@@ -902,9 +975,9 @@ export function ImageComposer({
                   variant="outline"
                   className="h-9 shrink-0 rounded-full border-stone-200 bg-white text-stone-700"
                 >
-                  <a href={BANANA_PROMPTS_REPO_URL} target="_blank" rel="noreferrer">
+                  <a href="/prompt-manager">
                     <ExternalLink className="size-4" />
-                    源仓库
+                    管理提示词
                   </a>
                 </Button>
               </div>
@@ -943,7 +1016,7 @@ export function ImageComposer({
                 <div className="flex h-full min-h-[260px] items-center justify-center">
                   <div className="flex items-center gap-2 text-sm text-stone-500">
                     <LoaderCircle className="size-4 animate-spin" />
-                    正在读取 banana-prompt-quicker 提示词库
+                    正在读取提示词库
                   </div>
                 </div>
               ) : bananaPromptStatus === "error" ? (
@@ -1003,12 +1076,12 @@ export function ImageComposer({
                               {item.title}
                             </h3>
                             <p className="mt-2 line-clamp-3 text-xs leading-5 text-stone-500">
-                              {summarizeBananaPrompt(item)}
+                              {getPromptDescription(item)}
                             </p>
                           </div>
                           <div className="mt-auto flex items-center justify-between gap-3">
                             <div className="min-w-0 truncate text-xs text-stone-400">
-                              {item.author ? `作者 ${item.author}` : "banana-prompt-quicker"}
+                              {item.author ? `作者 ${item.author}` : "提示词管理"}
                             </div>
                             <Button
                               type="button"
@@ -1029,7 +1102,7 @@ export function ImageComposer({
           </DialogContent>
         </Dialog>
 
-        <div className="rounded-[32px] border border-stone-200 bg-white">
+        <div className="rounded-[28px] border border-stone-200 bg-white sm:rounded-[32px]">
           <div
             className="relative cursor-text"
             onClick={() => {
@@ -1057,17 +1130,17 @@ export function ImageComposer({
                   void onSubmit();
                 }
               }}
-              className="min-h-[148px] resize-none rounded-[32px] border-0 bg-transparent px-6 pt-6 pb-20 text-[15px] leading-7 text-stone-900 shadow-none placeholder:text-stone-400 focus-visible:ring-0"
+              className="min-h-[112px] resize-none rounded-[28px] border-0 bg-transparent px-4 pt-4 pb-3 text-[15px] leading-7 text-stone-900 shadow-none placeholder:text-stone-400 focus-visible:ring-0 sm:min-h-[148px] sm:rounded-[32px] sm:px-6 sm:pt-6 sm:pb-20"
             />
 
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-white via-white/95 to-transparent px-4 pb-4 pt-6 sm:px-6">
-              <div className="flex items-end justify-between gap-3">
-                <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 sm:gap-3">
+            <div className="border-t border-stone-100 bg-white px-3 pb-3 pt-3 sm:absolute sm:inset-x-0 sm:bottom-0 sm:border-t-0 sm:bg-gradient-to-t sm:from-white sm:via-white/95 sm:to-transparent sm:px-6 sm:pb-4 sm:pt-6">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div className="grid min-w-0 flex-1 grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
                   {mode === "edit" && (
                     <Button
                       type="button"
                       variant="outline"
-                      className="h-9 rounded-full border-stone-200 bg-white px-3 text-xs font-medium text-stone-700 shadow-none sm:h-10 sm:px-4 sm:text-sm"
+                      className="col-span-2 h-9 rounded-full border-stone-200 bg-white px-3 text-xs font-medium text-stone-700 shadow-none sm:col-span-1 sm:h-10 sm:px-4 sm:text-sm"
                       onClick={onPickReferenceImage}
                     >
                       <ImagePlus className="size-3.5 sm:size-4" />
@@ -1075,16 +1148,16 @@ export function ImageComposer({
                       <span className="sm:hidden">{referenceImages.length > 0 ? "继续" : "上传"}</span>
                     </Button>
                   )}
-                  <div className="rounded-full bg-stone-100 px-2 py-1 text-[10px] font-medium text-stone-600 sm:px-3 sm:py-2 sm:text-xs">
-                    <span className="hidden xs:inline">剩余额度 </span>{availableQuota}
+                  <div className="inline-flex h-9 items-center justify-center rounded-full bg-stone-100 px-3 text-[11px] font-medium text-stone-600 sm:h-auto sm:px-3 sm:py-2 sm:text-xs">
+                    <span className="mr-1">额度</span>{availableQuota}
                   </div>
                   {activeTaskCount > 0 && (
-                    <div className="flex items-center gap-1 rounded-full bg-amber-50 px-2 py-1 text-[10px] font-medium text-amber-700 sm:gap-1.5 sm:px-3 sm:py-2 sm:text-xs">
+                    <div className="col-span-2 flex h-9 items-center justify-center gap-1 rounded-full bg-amber-50 px-3 text-[11px] font-medium text-amber-700 sm:col-span-1 sm:h-auto sm:gap-1.5 sm:px-3 sm:py-2 sm:text-xs">
                       <LoaderCircle className="size-3 animate-spin" />
                       {activeTaskCount}<span className="hidden sm:inline"> 个任务处理中</span>
                     </div>
                   )}
-                  <div className="flex items-center gap-1.5 rounded-full border border-stone-200 bg-white px-2 py-0.5 sm:gap-2 sm:px-3 sm:py-1">
+                  <div className="flex h-9 items-center justify-center gap-1.5 rounded-full border border-stone-200 bg-white px-2 sm:h-auto sm:gap-2 sm:px-3 sm:py-1">
                     <span className="text-[11px] font-medium text-stone-700 sm:text-sm">张数</span>
                     <Input
                       type="number"
@@ -1098,19 +1171,19 @@ export function ImageComposer({
                   </div>
                   <div
                     ref={sizeMenuRef}
-                    className="relative flex items-center gap-1.5 rounded-full border border-stone-200 bg-white px-2 py-0.5 text-[11px] sm:gap-2 sm:px-3 sm:py-1 sm:text-[13px]"
+                    className="relative col-span-2 flex h-9 items-center gap-1.5 rounded-full border border-stone-200 bg-white px-3 text-[11px] sm:col-span-1 sm:h-auto sm:gap-2 sm:py-1 sm:text-[13px]"
                   >
                     <span className="font-medium text-stone-700 sm:text-sm">比例</span>
                     <button
                       type="button"
-                      className="flex h-7 w-[110px] items-center justify-between bg-transparent text-left text-xs font-bold text-stone-700 sm:h-8 sm:w-[132px]"
+                      className="flex h-7 min-w-0 flex-1 items-center justify-between bg-transparent text-left text-xs font-bold text-stone-700 sm:h-8 sm:w-[132px] sm:flex-none"
                       onClick={() => setIsSizeMenuOpen((open) => !open)}
                     >
                       <span className="truncate">{imageSizeLabel}</span>
                       <ChevronDown className={cn("size-4 shrink-0 opacity-60 transition", isSizeMenuOpen && "rotate-180")} />
                     </button>
                     {isSizeMenuOpen ? (
-                      <div className="absolute bottom-[calc(100%+10px)] left-0 z-50 w-[170px] overflow-hidden rounded-3xl border border-white/80 bg-white p-2 shadow-[0_24px_80px_-32px_rgba(15,23,42,0.35)] sm:w-[186px]">
+                      <div className="absolute bottom-[calc(100%+10px)] left-0 z-50 w-full overflow-hidden rounded-3xl border border-white/80 bg-white p-2 shadow-[0_24px_80px_-32px_rgba(15,23,42,0.35)] sm:w-[186px]">
                         {imageSizeOptions.map((option) => {
                           const active = option.value === imageSize;
                           return (
@@ -1135,7 +1208,7 @@ export function ImageComposer({
                     ) : null}
                   </div>
 
-                  <div className="flex items-center gap-1.5 sm:gap-2">
+                  <div className="col-span-2 grid grid-cols-2 gap-2 sm:flex sm:items-center sm:gap-2">
                     <ModeButton active={mode === "generate"} onClick={() => onModeChange("generate")}>
                       文生图
                     </ModeButton>
@@ -1149,7 +1222,7 @@ export function ImageComposer({
                   type="button"
                   onClick={() => void onSubmit()}
                   disabled={!prompt.trim() || (mode === "edit" && referenceImages.length === 0)}
-                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-stone-950 text-white transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:bg-stone-300 sm:size-11"
+                  className="inline-flex size-11 shrink-0 items-center justify-center self-end rounded-full bg-stone-950 text-white transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:bg-stone-300 sm:size-11"
                   aria-label={mode === "edit" ? "编辑图片" : "生成图片"}
                 >
                   <ArrowUp className="size-3.5 sm:size-4" />

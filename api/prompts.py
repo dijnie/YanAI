@@ -9,12 +9,18 @@ from services.prompt_service import prompt_library_service
 
 class PromptLibraryRequest(BaseModel):
     title: str = ""
+    description: str = ""
     preview: str = ""
     reference_image_urls: list[str] = Field(default_factory=list)
     prompt: str = ""
     author: str = ""
     link: str = ""
     mode: str = "generate"
+    image_size: str = ""
+    image_count: str = ""
+    icon: str = ""
+    quick_access: bool = False
+    sort_order: int | None = None
     category: str = ""
     sub_category: str = ""
 

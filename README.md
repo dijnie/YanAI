@@ -144,29 +144,33 @@ environment:
 
 ## 截图
 
-画图工作台：
+### 画图功能
 
-![image-20260526172427870](README.assets/image-20260526172427870.png)
 
-图生图与预设提示词：
+### 用户管理
 
-![image-20260526172409948](README.assets/image-20260526172409948.png)
 
-系统设置：
+### 账号池管理（添加RT的获取）
+![image-20260527225645511](README.assets/image-20260527225645511.png)
 
-![image](assets/chery_studio.png)
+### 注册机管理
+![image-20260527225605667](README.assets/image-20260527225605667.png)
 
-号池管理：
+### 提示词管理
+![image-20260527225454889](README.assets/image-20260527225454889.png)
 
-![image](assets/account_pool.png)
+### 图片管理
 
-渠道管理：
+![image-20260527225445602](README.assets/image-20260527225445602.png)
 
-![image](assets/new_api.png)
+### 渠道管理（在原有项目基础上添加第三方渠道）
+![image-20260527225435590](README.assets/image-20260527225435590.png)
 
-提示词管理
+### 兑换码管理
+![image-20260527225427154](README.assets/image-20260527225427154.png)
 
-![image-20260527173349824](README.assets/image-20260527173349824.png)
+### 用户登录注册功能（添加L站登录和邮箱验证）
+![image-20260527224931515](README.assets/image-20260527224931515.png)
 
 ## API
 
@@ -342,9 +346,9 @@ curl http://localhost:8000/v1/responses \
 
 ## 致谢
 
-感谢 [basketikun/chatgpt2api](https://github.com/basketikun/chatgpt2api) 项目在 ChatGPT 逆向整理、OpenAI 兼容接口封装和自托管部署思路上的探索与开源分享。颜AI 的项目方向与部分实现思路受其启发。[L站帖子](https://linux.do/t/topic/2070927)<br>
-感谢 [L站佬友提供的提示词](https://linux.do/t/topic/532495)<br>
-感谢 [glidea/banana-prompt-quicker](https://github.com/glidea/banana-prompt-quicker) 项目在提示词快捷工作流上的开源分享与启发。[L站帖子](https://linux.do/t/topic/1244563)<br>
+感谢佬友的 [basketikun/chatgpt2api](https://github.com/basketikun/chatgpt2api) 项目在 ChatGPT 逆向整理、OpenAI 兼容接口封装和自托管部署思路上的探索与开源分享。颜AI 的项目方向与部分实现思路受其启发。<br>
+感谢佬友的[贴一个让设计师也觉得脊背发凉的提示词 ](https://linux.do/t/topic/532495)<br>
+感谢佬友的 [🍌Banana Prompt Quicker](https://linux.do/t/topic/1244563)项目在提示词快捷工作流上的开源分享与启发。<br>
 
 ## Contributors
 

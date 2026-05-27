@@ -12,6 +12,7 @@ from services.storage.base import StorageBackend
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 BOOTSTRAP_PROMPT_PATHS = (
+    BASE_DIR / "services" / "default_prompt_library.json",
     BASE_DIR / "data" / "prompt_library.seed.json",
     BASE_DIR / "web" / "public" / "banana-prompt-quicker" / "prompts.json",
     BASE_DIR / "web_dist" / "banana-prompt-quicker" / "prompts.json",
@@ -72,6 +73,21 @@ def _normalize_url_list(value: object) -> list[str]:
     return [url for item in candidates if (url := _clean(item))]
 
 
+def _bool(value: object, default: bool = False) -> bool:
+    if value is None:
+        return default
+    if isinstance(value, str):
+        return value.strip().lower() in {"1", "true", "yes", "on"}
+    return bool(value)
+
+
+def _int_or_none(value: object) -> int | None:
+    try:
+        return int(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return None
+
+
 def _normalize_prompt(raw: object, *, generated_id: bool = True) -> dict[str, Any] | None:
     if not isinstance(raw, dict):
         return None
@@ -81,20 +97,29 @@ def _normalize_prompt(raw: object, *, generated_id: bool = True) -> dict[str, An
         return None
     item_id = _clean(raw.get("id")) or (_stable_id(raw) if generated_id else uuid.uuid4().hex[:16])
     created = _clean(raw.get("created")) or _clean(raw.get("created_at")) or _now_iso()
-    return {
+    item = {
         "id": item_id,
         "title": title,
+        "description": _clean(raw.get("description")),
         "preview": _clean(raw.get("preview")),
         "reference_image_urls": _normalize_url_list(raw.get("reference_image_urls")),
         "prompt": prompt,
         "author": _clean(raw.get("author")),
         "link": _clean(raw.get("link")),
         "mode": _normalize_mode(raw.get("mode")),
+        "image_size": _clean(raw.get("image_size")),
+        "image_count": _clean(raw.get("image_count")),
+        "icon": _clean(raw.get("icon")),
+        "quick_access": _bool(raw.get("quick_access"), False),
         "category": _clean(raw.get("category")),
         "sub_category": _clean(raw.get("sub_category")),
         "created": created,
         "updated_at": _clean(raw.get("updated_at")) or created,
     }
+    sort_order = _int_or_none(raw.get("sort_order"))
+    if sort_order is not None:
+        item["sort_order"] = sort_order
+    return item
 
 
 class PromptLibraryService:
@@ -118,10 +143,28 @@ class PromptLibraryService:
         items = [_normalize_prompt(item) for item in stored if isinstance(item, dict)]
         normalized = [item for item in items if item is not None]
         if normalized:
-            return normalized
+            return self._merge_default_prompts(normalized)
         return self._load_bootstrap_items()
 
+    def _merge_default_prompts(self, stored_items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        bootstrap_items = self._load_bootstrap_items()
+        default_items = [
+            item for item in bootstrap_items
+            if item.get("quick_access") or item.get("category") == "内置快捷"
+        ]
+        if not default_items:
+            return stored_items
+
+        stored_ids = {_clean(item.get("id")) for item in stored_items}
+        default_ids = {_clean(item.get("id")) for item in default_items}
+        if stored_ids & default_ids:
+            return stored_items
+
+        return [*default_items, *stored_items]
+
     def _load_bootstrap_items(self) -> list[dict[str, Any]]:
+        merged: list[dict[str, Any]] = []
+        seen: set[str] = set()
         for path in self.bootstrap_paths:
             if not path.exists():
                 continue
@@ -138,8 +181,13 @@ class PromptLibraryService:
             items = [_normalize_prompt(item) for item in raw_items if isinstance(item, dict)]
             normalized = [item for item in items if item is not None]
             if normalized:
-                return normalized
-        return []
+                for item in normalized:
+                    item_id = _clean(item.get("id"))
+                    if item_id in seen:
+                        continue
+                    seen.add(item_id)
+                    merged.append(item)
+        return merged
 
     def _save(self) -> None:
         self.storage.save_prompt_library(self._items)
@@ -168,12 +216,18 @@ class PromptLibraryService:
             candidate = dict(current)
             for key in (
                 "title",
+                "description",
                 "preview",
                 "reference_image_urls",
                 "prompt",
                 "author",
                 "link",
                 "mode",
+                "image_size",
+                "image_count",
+                "icon",
+                "quick_access",
+                "sort_order",
                 "category",
                 "sub_category",
             ):

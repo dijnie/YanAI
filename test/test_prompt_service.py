@@ -18,8 +18,12 @@ class PromptLibraryServiceTests(unittest.TestCase):
                         "prompts": [
                             {
                                 "title": "旧提示词",
+                                "description": "旧描述",
                                 "prompt": "生成一张海报",
                                 "mode": "generate",
+                                "image_size": "4:3",
+                                "image_count": "1",
+                                "quick_access": True,
                                 "category": "工作",
                             }
                         ]
@@ -32,6 +36,10 @@ class PromptLibraryServiceTests(unittest.TestCase):
             service = PromptLibraryService(storage, bootstrap_paths=(seed_path,), assets_dir=root / "assets")
 
             self.assertEqual(len(service.list_prompts()), 1)
+            original = service.list_prompts()[0]
+            self.assertEqual(original["description"], "旧描述")
+            self.assertEqual(original["image_size"], "4:3")
+            self.assertTrue(original["quick_access"])
 
             created = service.create_prompt(
                 {
@@ -57,6 +65,44 @@ class PromptLibraryServiceTests(unittest.TestCase):
 
             self.assertTrue(service.delete_prompt(created["id"]))
             self.assertEqual(len(service.list_prompts()), 1)
+
+    def test_default_prompts_are_added_to_existing_legacy_library(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            seed_path = root / "seed.json"
+            seed_path.write_text(
+                json.dumps(
+                    {
+                        "prompts": [
+                            {
+                                "id": "quick",
+                                "title": "快捷提示词",
+                                "prompt": "生成快捷内容",
+                                "quick_access": True,
+                                "category": "内置快捷",
+                            }
+                        ]
+                    },
+                    ensure_ascii=False,
+                ),
+                encoding="utf-8",
+            )
+            storage = JSONStorageBackend(root / "accounts.json")
+            storage.save_prompt_library(
+                [
+                    {
+                        "id": "legacy",
+                        "title": "旧库提示词",
+                        "prompt": "生成旧库内容",
+                        "category": "工作",
+                    }
+                ]
+            )
+
+            service = PromptLibraryService(storage, bootstrap_paths=(seed_path,), assets_dir=root / "assets")
+            items = service.list_prompts()
+
+            self.assertEqual([item["id"] for item in items], ["quick", "legacy"])
 
 
 if __name__ == "__main__":

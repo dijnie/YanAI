@@ -113,12 +113,18 @@ export type ManagedImage = {
 export type PromptLibraryItem = {
   id: string;
   title: string;
+  description?: string;
   preview?: string;
   reference_image_urls?: string[];
   prompt: string;
   author?: string;
   link?: string;
   mode?: "generate" | "edit" | string;
+  image_size?: string;
+  image_count?: string;
+  icon?: string;
+  quick_access?: boolean;
+  sort_order?: number;
   category?: string;
   sub_category?: string;
   created?: string;
@@ -127,12 +133,18 @@ export type PromptLibraryItem = {
 
 export type PromptLibraryPayload = {
   title: string;
+  description?: string;
   preview?: string;
   reference_image_urls?: string[];
   prompt: string;
   author?: string;
   link?: string;
   mode?: "generate" | "edit" | string;
+  image_size?: string;
+  image_count?: string;
+  icon?: string;
+  quick_access?: boolean;
+  sort_order?: number | null;
   category?: string;
   sub_category?: string;
 };

@@ -839,7 +839,7 @@ function ImagePageContent({ session }: { session: StoredAuthSession }) {
 
   return (
     <>
-      <section className="mx-auto grid h-[calc(100vh-5rem)] min-h-0 w-full max-w-[1380px] grid-cols-1 gap-3 px-3 pb-6 lg:grid-cols-[240px_minmax(0,1fr)]">
+      <section className="mx-auto grid h-[calc(100dvh-5rem)] min-h-0 w-full max-w-[1380px] grid-cols-1 gap-3 px-0 pb-3 sm:px-3 sm:pb-6 lg:grid-cols-[240px_minmax(0,1fr)]">
         <div className="hidden h-full min-h-0 border-r border-stone-200/70 pr-3 lg:block">
           <ImageSidebar
             conversations={conversations}

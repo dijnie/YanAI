@@ -24,24 +24,30 @@ import { useAuthGuard } from "@/lib/use-auth-guard";
 
 type PromptFormState = {
   title: string;
+  description: string;
   preview: string;
   reference_image_urls: string;
   prompt: string;
   author: string;
   link: string;
   mode: "generate" | "edit";
+  image_size: string;
+  image_count: string;
   category: string;
   sub_category: string;
 };
 
 const emptyForm: PromptFormState = {
   title: "",
+  description: "",
   preview: "",
   reference_image_urls: "",
   prompt: "",
   author: "",
   link: "",
   mode: "generate",
+  image_size: "",
+  image_count: "",
   category: "",
   sub_category: "",
 };
@@ -64,12 +70,15 @@ function toForm(item?: PromptLibraryItem): PromptFormState {
   }
   return {
     title: item.title || "",
+    description: item.description || "",
     preview: item.preview || "",
     reference_image_urls: (item.reference_image_urls || []).join("\n"),
     prompt: item.prompt || "",
     author: item.author || "",
     link: item.link || "",
     mode: normalizeMode(item.mode),
+    image_size: item.image_size || "",
+    image_count: item.image_count || "",
     category: item.category || "",
     sub_category: item.sub_category || "",
   };
@@ -86,12 +95,15 @@ function splitUrls(value: string) {
 function toPayload(form: PromptFormState): PromptLibraryPayload {
   return {
     title: form.title.trim(),
+    description: form.description.trim(),
     preview: form.preview.trim(),
     reference_image_urls: splitUrls(form.reference_image_urls),
     prompt: form.prompt.trim(),
     author: form.author.trim(),
     link: form.link.trim(),
     mode: form.mode,
+    image_size: form.image_size.trim(),
+    image_count: form.image_count.trim(),
     category: form.category.trim(),
     sub_category: form.sub_category.trim(),
   };
@@ -129,7 +141,7 @@ function PromptManagerContent() {
       if (!text) {
         return true;
       }
-      return [item.title, item.prompt, item.author, item.category, item.sub_category]
+      return [item.title, item.description, item.prompt, item.author, item.category, item.sub_category]
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(text));
     });
@@ -236,7 +248,7 @@ function PromptManagerContent() {
         <div className="space-y-1">
           <div className="text-xs font-semibold tracking-[0.18em] text-stone-500 uppercase">Prompts</div>
           <h1 className="text-2xl font-semibold tracking-tight">提示词管理</h1>
-          <p className="text-sm text-stone-500">源自 glidea/banana-prompt-quicker，可在这里添加、修改和删除。</p>
+          <p className="text-sm text-stone-500">快捷提示词和更多提示词都在这里添加、修改和删除。</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={() => void loadPrompts()} disabled={isLoading} className="h-10 rounded-xl border-stone-200 bg-white px-4 text-stone-700">
@@ -311,6 +323,7 @@ function PromptManagerContent() {
                 </div>
                 <div className="min-w-0">
                   <h2 className="line-clamp-2 text-sm font-semibold leading-5 text-stone-950">{item.title}</h2>
+                  {item.description ? <p className="mt-1 truncate text-xs text-stone-400">{item.description}</p> : null}
                   <p className="mt-2 line-clamp-4 text-xs leading-5 text-stone-500">{summarizePrompt(item.prompt)}</p>
                 </div>
                 <div className="mt-auto flex items-center justify-between gap-2">
@@ -340,7 +353,7 @@ function PromptManagerContent() {
               {editingItem ? "编辑提示词" : "添加提示词"}
             </DialogTitle>
             <DialogDescription className="text-stone-500">
-              标题、提示词和示例图会出现在画图页的更多提示词里。
+              标题、卡片描述、提示词和示例图会同步到画图页。
             </DialogDescription>
           </DialogHeader>
           <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6">
@@ -349,6 +362,10 @@ function PromptManagerContent() {
                 <label className="block space-y-1.5">
                   <span className="text-xs font-medium text-stone-500">标题</span>
                   <Input value={form.title} onChange={(event) => updateForm({ title: event.target.value })} className="h-10 rounded-xl border-stone-200" />
+                </label>
+                <label className="block space-y-1.5">
+                  <span className="text-xs font-medium text-stone-500">卡片描述</span>
+                  <Input value={form.description} onChange={(event) => updateForm({ description: event.target.value })} className="h-10 rounded-xl border-stone-200" />
                 </label>
                 <div className="grid gap-3 sm:grid-cols-3">
                   <label className="block space-y-1.5">
@@ -370,6 +387,16 @@ function PromptManagerContent() {
                   <label className="block space-y-1.5">
                     <span className="text-xs font-medium text-stone-500">子分类</span>
                     <Input value={form.sub_category} onChange={(event) => updateForm({ sub_category: event.target.value })} className="h-10 rounded-xl border-stone-200" />
+                  </label>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="block space-y-1.5">
+                    <span className="text-xs font-medium text-stone-500">默认比例</span>
+                    <Input value={form.image_size} onChange={(event) => updateForm({ image_size: event.target.value })} placeholder="例如 4:3、1:1，留空为未指定" className="h-10 rounded-xl border-stone-200" />
+                  </label>
+                  <label className="block space-y-1.5">
+                    <span className="text-xs font-medium text-stone-500">默认张数</span>
+                    <Input value={form.image_count} onChange={(event) => updateForm({ image_count: event.target.value })} placeholder="例如 1，留空则不覆盖" className="h-10 rounded-xl border-stone-200" />
                   </label>
                 </div>
                 <label className="block space-y-1.5">
