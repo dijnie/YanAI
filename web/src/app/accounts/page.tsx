@@ -501,7 +501,7 @@ function AccountsPageContent() {
   );
 
   return (
-    <>
+    <section className="h-full min-h-0 space-y-5 overflow-y-auto pr-1 pb-8 [scrollbar-color:rgba(244,114,182,.45)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-rose-300/55 [&::-webkit-scrollbar-track]:bg-transparent">
       <section className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-1">
           <div className="text-xs font-semibold tracking-[0.18em] text-stone-500 uppercase">
@@ -1097,7 +1097,7 @@ function AccountsPageContent() {
           </CardContent>
         </Card>
       </section>
-    </>
+    </section>
   );
 }
 

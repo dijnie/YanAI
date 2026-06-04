@@ -204,32 +204,37 @@ python scripts/migrate_storage.py --from json --to postgres --verify-only
 ## 截图
 
 ### 画图功能
-![image-20260528003118319](README.assets/image-20260528003118319.png)
+![image-20260604221114171](README.assets/image-20260604221114171.png)
 
 ### 用户管理
-![image-20260527225749892](README.assets/image-20260527225749892.png)
+![image-20260604221129930](README.assets/image-20260604221129930.png)
 
 ### 账号池管理（添加RT的获取）
-![image-20260527225645511](README.assets/image-20260527225645511.png)
+![image-20260604221249125](README.assets/image-20260604221249125.png)
 
 ### 注册机管理
-![image-20260527225605667](README.assets/image-20260527225605667.png)
+![image-20260604221336677](README.assets/image-20260604221336677.png)
 
 ### 提示词管理
-![image-20260527225454889](README.assets/image-20260527225454889.png)
+![image-20260604221403230](README.assets/image-20260604221403230.png)
 
 ### 图片管理
 
-![image-20260527225445602](README.assets/image-20260527225445602.png)
+![image-20260604221416836](README.assets/image-20260604221416836.png)
 
 ### 渠道管理（在原有项目基础上添加第三方渠道）
-![image-20260527225435590](README.assets/image-20260527225435590.png)
+![image-20260604221426835](README.assets/image-20260604221426835.png)
+
+### 模型管理（可作为渠道接入newapi）
+
+![image-20260604221442002](README.assets/image-20260604221442002.png)
 
 ### 兑换码管理
-![image-20260527225427154](README.assets/image-20260527225427154.png)
+
+![image-20260604221532803](README.assets/image-20260604221532803.png)
 
 ### 用户登录注册功能（添加L站登录和邮箱验证）
-![image-20260527224931515](README.assets/image-20260527224931515.png)
+![image-20260604221546536](README.assets/image-20260604221546536.png)
 
 ## API
 
