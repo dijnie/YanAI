@@ -35,34 +35,34 @@ type EmptyStatePromptSource = {
 
 const emptyStateHeroSource: EmptyStatePromptSource = {
   id: "glasses",
-  fallbackTitle: "不知道适合什么眼镜？",
-  fallbackDescription: "面部特征分析 + 眼镜搭配指南",
+  fallbackTitle: "Not sure which glasses fit?",
+  fallbackDescription: "Facial feature analysis + eyewear guide",
   fallbackPreview: "https://cdn3.ldstatic.com/optimized/4X/f/d/3/fd350eb34e18b9bd60706b1820a89bf03730f824_2_600x750.jpeg",
 };
 
 const emptyStateExampleSources: EmptyStatePromptSource[] = [
   {
-    title: "中国神话角色Q版组合插画",
-    label: "国风插画",
-    fallbackTitle: "中国神话角色Q版组合插画",
+    title: "Cute Chinese Mythology Character Set",
+    label: "Chinese-style illustration",
+    fallbackTitle: "Cute Chinese Mythology Character Set",
     fallbackPreview: "/banana-prompt-quicker/images/chinese_mythology_characters.jpg",
   },
   {
-    title: "生成商业促销海报",
-    label: "产品海报",
-    fallbackTitle: "生成商业促销海报",
+    title: "Generate Commercial Promo Poster",
+    label: "Product Poster",
+    fallbackTitle: "Generate Commercial Promo Poster",
     fallbackPreview: "/banana-prompt-quicker/images/promo_poster.jpg",
   },
   {
     id: "handwritten-notes",
-    label: "手写笔记风格",
-    fallbackTitle: "手写笔记风格",
+    label: "Handwritten Notes Style",
+    fallbackTitle: "Handwritten Notes Style",
     fallbackPreview: "https://cdn3.ldstatic.com/optimized/4X/a/7/c/a7c6e18b0b22cd9f305cedec8aa55aecc8fae4d4_2_499x750.jpeg",
   },
   {
     id: "photo-portrait-v1",
-    label: "写真随机风格 V1",
-    fallbackTitle: "写真随机风格 V1",
+    label: "Random Portrait Style V1",
+    fallbackTitle: "Random Portrait Style V1",
     fallbackPreview: "/prompt-assets/2026/06/02/2d2db3cac0f5412d83e79af24905b4e9.png",
   },
 ];
@@ -70,7 +70,7 @@ const emptyStateExampleSources: EmptyStatePromptSource[] = [
 function buildPromptShareTitle(prompt: string) {
   const cleaned = prompt.replace(/\s+/g, " ").trim();
   if (!cleaned) {
-    return "未命名提示词";
+    return "Untitled Prompt";
   }
   return cleaned.length > 24 ? `${cleaned.slice(0, 24)}...` : cleaned;
 }
@@ -148,31 +148,31 @@ export function ImageResults({
   const copyTurnPrompt = async (prompt: string) => {
     const cleaned = prompt.trim();
     if (!cleaned) {
-      toast.error("没有可复制的提示词");
+      toast.error("No prompt to copy");
       return;
     }
     await navigator.clipboard.writeText(cleaned);
-    toast.success("提示词已复制");
+    toast.success("Prompt copied");
   };
 
   const shareTurnPrompt = async (turn: { prompt: string; mode: string; size: string; count: number }) => {
     const cleaned = turn.prompt.trim();
     if (!cleaned) {
-      toast.error("没有可分享的提示词");
+      toast.error("No prompt to share");
       return;
     }
     try {
       const result = await sharePromptPayload({
         title: buildPromptShareTitle(cleaned),
-        description: turn.mode === "edit" ? "图生图提示词" : "文生图提示词",
+        description: turn.mode === "edit" ? "Image-to-image prompt" : "Text-to-image prompt",
         prompt: cleaned,
         mode: turn.mode,
         image_size: turn.size,
         image_count: String(turn.count),
       });
-      toast.success(result === "shared" ? "分享已打开" : "分享链接已复制");
+      toast.success(result === "shared" ? "Share opened" : "Share link copied");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "分享失败");
+      toast.error(error instanceof Error ? error.message : "Share failed");
     }
   };
 
@@ -187,7 +187,7 @@ export function ImageResults({
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#2d1d26]/70 via-[#2d1d26]/12 to-white/10" />
           <div className="absolute inset-x-0 bottom-0 p-5 text-white">
-            <div className="inline-flex rounded-full bg-white/18 px-3 py-1 text-xs font-semibold backdrop-blur">示例预览</div>
+            <div className="inline-flex rounded-full bg-white/18 px-3 py-1 text-xs font-semibold backdrop-blur">Sample Preview</div>
             <h2 className="mt-3 text-3xl font-bold tracking-tight">{emptyStateHero.title}</h2>
             <p className="mt-2 max-w-xl text-sm leading-6 text-white/78">{emptyStateHero.description}</p>
           </div>
@@ -198,16 +198,16 @@ export function ImageResults({
             <div className="grid size-12 place-items-center rounded-lg bg-gradient-to-br from-rose-100 to-fuchsia-100 text-rose-500">
               <ImageIcon className="size-5" />
             </div>
-            <h1 className="mt-4 text-2xl font-bold tracking-tight text-stone-950">从右侧创作台开始</h1>
+            <h1 className="mt-4 text-2xl font-bold tracking-tight text-stone-950">Start from the composer on the right</h1>
             <p className="mt-2 text-sm leading-6 text-stone-500">
-              支持文生图、图生图、参考图上传和粘贴、提示词库、队列恢复、灯箱预览与继续编辑。
+              Supports text-to-image, image-to-image, reference uploads and paste, prompt library, queue recovery, lightbox preview, and continued editing.
             </p>
           </div>
           <div className="grid grid-cols-2 gap-3">
             {emptyStateExamples.map((item) => (
               <div key={item.label} className="rounded-lg border border-white/70 bg-gradient-to-br from-white/76 to-rose-50/70 p-3">
                 <div className="h-20 overflow-hidden rounded-lg border border-white/70 bg-rose-50">
-                  <img src={item.preview} alt={`${item.label}示例`} className="h-full w-full object-cover" loading="lazy" />
+                  <img src={item.preview} alt={`${item.label}sample`} className="h-full w-full object-cover" loading="lazy" />
                 </div>
                 <div className="mt-3 text-sm font-semibold text-stone-800">{item.label}</div>
               </div>
@@ -245,8 +245,8 @@ export function ImageResults({
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="min-w-0">
                   <div className="mb-2 flex flex-wrap gap-2 text-[11px] font-medium text-stone-400">
-                    <span>第 {turnIndex + 1} 轮</span>
-                    <span>{turn.mode === "edit" ? "图生图" : "文生图"}</span>
+                    <span>Turn {turnIndex + 1}</span>
+                    <span>{turn.mode === "edit" ? "\u56fe\u751f\u56fe" : "Text-to-image"}</span>
                     <span>{getTurnStatusLabel(turn.status)}</span>
                     <span>{formatConversationTime(turn.createdAt)}</span>
                   </div>
@@ -261,7 +261,7 @@ export function ImageResults({
                     onClick={() => void copyTurnPrompt(turn.prompt)}
                   >
                     <Copy className="size-4" />
-                    复制
+                    Copy
                   </Button>
                   <Button
                     type="button"
@@ -271,10 +271,10 @@ export function ImageResults({
                     onClick={() => void shareTurnPrompt(turn)}
                   >
                     <Share2 className="size-4" />
-                    分享
+                    Share
                   </Button>
                   <div className="rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold text-stone-600">
-                    {turn.count} 张
+                    {turn.count} images
                   </div>
                 </div>
               </div>
@@ -282,7 +282,7 @@ export function ImageResults({
 
             {turn.referenceImages.length > 0 ? (
               <div className="border-b border-rose-100/60 px-4 py-3">
-                <div className="mb-3 text-xs font-semibold text-stone-500">本轮参考图</div>
+                <div className="mb-3 text-xs font-semibold text-stone-500">Reference Images for This Turn</div>
                 <div className="flex flex-wrap gap-3">
                   {turn.referenceImages.map((image, index) => (
                     <div key={`${turn.id}-${image.name}-${index}`} className="flex items-end gap-2">
@@ -290,11 +290,11 @@ export function ImageResults({
                         type="button"
                         onClick={() => onOpenLightbox(referenceLightboxImages, index)}
                         className="group relative size-20 overflow-hidden rounded-lg border border-rose-100 bg-rose-50/60 text-left transition hover:border-rose-200"
-                        aria-label={`预览参考图 ${image.name || index + 1}`}
+                        aria-label={`Preview reference image ${image.name || index + 1}`}
                       >
                         <img
                           src={image.dataUrl}
-                          alt={image.name || `参考图 ${index + 1}`}
+                          alt={image.name || `Reference image ${index + 1}`}
                           className="absolute inset-0 h-full w-full object-cover transition duration-200 group-hover:scale-[1.02]"
                         />
                       </button>
@@ -305,7 +305,7 @@ export function ImageResults({
                         onClick={() => onContinueEdit(selectedConversation.id, image)}
                       >
                         <Sparkles className="size-4" />
-                        加入编辑
+                        Use for Editing
                       </Button>
                     </div>
                   ))}
@@ -322,7 +322,7 @@ export function ImageResults({
                   const imageSrc = getStoredImageSrc(image);
                   const sizeLabel = image.b64_json && !image.url ? formatBase64ImageSize(image.b64_json) : "";
                   const dimensions = imageDimensions[image.id];
-                  const imageMeta = [sizeLabel, dimensions].filter(Boolean).join(" · ");
+                  const imageMeta = [sizeLabel, dimensions].filter(Boolean).join(" - ");
 
                   return (
                     <div
@@ -354,7 +354,7 @@ export function ImageResults({
                       </button>
                       <div className="flex items-center justify-between gap-2 px-3 py-3">
                         <div className="min-w-0 text-xs text-stone-500">
-                          <span>结果 {index + 1}</span>
+                          <span>Result {index + 1}</span>
                           {imageMeta ? <span className="ml-2 text-stone-400">{imageMeta}</span> : null}
                         </div>
                         <Button
@@ -364,7 +364,7 @@ export function ImageResults({
                           onClick={() => onContinueEdit(selectedConversation.id, image)}
                         >
                           <Sparkles className="size-4" />
-                          编辑
+                          Edit
                         </Button>
                       </div>
                     </div>
@@ -382,7 +382,7 @@ export function ImageResults({
                       )}
                     >
                       <div className="flex h-full items-center justify-center px-6 py-8 text-center text-sm leading-6 text-rose-600">
-                        {image.error || "生成失败"}
+                        {image.error || "Generation failed"}
                       </div>
                     </div>
                   );
@@ -405,7 +405,7 @@ export function ImageResults({
                           <LoaderCircle className="size-5 animate-spin" />
                         )}
                       </div>
-                      <p className="text-sm">{turn.status === "queued" ? "已加入当前对话队列..." : "正在处理图片..."}</p>
+                      <p className="text-sm">{turn.status === "queued" ? "Added to the current conversation queue..." : "Processing images..."}</p>
                     </div>
                   </div>
                 );
@@ -414,7 +414,7 @@ export function ImageResults({
 
             {turn.status === "queued" ? (
               <div className="mx-4 mb-4 rounded-lg bg-amber-50/70 px-4 py-3 text-sm leading-6 text-amber-700">
-                等待当前对话中的前序任务完成
+                Waiting for earlier tasks in this conversation
               </div>
             ) : null}
 
@@ -465,15 +465,15 @@ function buildEmptyStatePromptPreview(source: EmptyStatePromptSource, items: Pro
 
 function getTurnStatusLabel(status: ImageTurnStatus) {
   if (status === "queued") {
-    return "排队中";
+    return "Queued";
   }
   if (status === "generating") {
-    return "处理中";
+    return "Running";
   }
   if (status === "success") {
-    return "已完成";
+    return "Completed";
   }
-  return "失败";
+  return "Failed";
 }
 
 function formatBase64ImageSize(base64: string) {

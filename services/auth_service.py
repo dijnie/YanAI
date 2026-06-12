@@ -127,7 +127,7 @@ def _normalize_user_image_channel_config(
 
     normalized = {
         "enabled": _bool(pick("enabled", False), False),
-        "name": _clean_text(pick("name", "")) or "个人生图渠道",
+        "name": _clean_text(pick("name", "")) or "Personal Image Channel",
         "base_url": _clean_text(pick("base_url", "")).rstrip("/"),
         "models": _normalize_channel_models(pick("models", DEFAULT_USER_IMAGE_CHANNEL_MODELS)),
         "timeout": timeout,
@@ -170,7 +170,7 @@ class AuthService:
         if not key_hash:
             return None
         item_id = self._clean(raw.get("id")) or uuid.uuid4().hex[:12]
-        name = self._clean(raw.get("name")) or ("管理员密钥" if role == "admin" else "普通用户")
+        name = self._clean(raw.get("name")) or ("Admin Key" if role == "admin" else "Regular User")
         created_at = self._clean(raw.get("created_at")) or _now_iso()
         last_used_at = self._clean(raw.get("last_used_at")) or None
         return {
@@ -411,7 +411,7 @@ class AuthService:
             return [self._public_item(item) for item in items]
 
     def create_key(self, *, role: AuthRole, name: str = "") -> tuple[dict[str, object], str]:
-        normalized_name = self._clean(name) or ("管理员密钥" if role == "admin" else "普通用户")
+        normalized_name = self._clean(name) or ("Admin Key" if role == "admin" else "Regular User")
         raw_key = f"sk-{secrets.token_urlsafe(24)}"
         item = {
             "id": uuid.uuid4().hex[:12],
@@ -445,7 +445,7 @@ class AuthService:
                     return None
                 next_item = dict(item)
                 if "name" in updates and updates.get("name") is not None:
-                    next_item["name"] = self._clean(updates.get("name")) or next_item.get("name") or "普通用户"
+                    next_item["name"] = self._clean(updates.get("name")) or next_item.get("name") or "Regular User"
                 if "enabled" in updates and updates.get("enabled") is not None:
                     next_item["enabled"] = bool(updates.get("enabled"))
                 self._items[index] = next_item

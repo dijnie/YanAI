@@ -145,13 +145,13 @@ def send_registration_verification_code(email: str) -> None:
     code = f"{secrets.randbelow(1_000_000):06d}"
     html = f"""
     <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-height:1.7;color:#1c1917">
-      <h2 style="margin:0 0 12px">颜AI 邮箱验证码</h2>
-      <p>你正在注册颜AI账号，本次验证码为：</p>
+      <h2 style="margin:0 0 12px">YanAI Email Verification Code</h2>
+      <p>You are registering a YanAI account. Your verification code is:</p>
       <p style="font-size:28px;font-weight:700;letter-spacing:6px;margin:18px 0">{code}</p>
-      <p>验证码 10 分钟内有效。如果不是你本人操作，可以忽略这封邮件。</p>
+      <p>The code is valid for 10 minutes. If this wasn't you, you can ignore this email.</p>
     </div>
     """.strip()
-    _send_email(normalized, "颜AI 邮箱验证码", html)
+    _send_email(normalized, "YanAI Email Verification Code", html)
 
     with _lock:
         _codes[normalized] = VerificationRecord(

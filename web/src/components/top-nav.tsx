@@ -32,24 +32,24 @@ type NavItem = {
 };
 
 const adminNavItems = [
-  { href: "/image", label: "画图", icon: Sparkles },
-  { href: "/users", label: "用户管理", icon: Users },
-  { href: "/accounts", label: "账号池管理", icon: Boxes },
-  { href: "/register", label: "注册机", icon: KeyRound },
-  { href: "/prompt-manager", label: "提示词管理", icon: PenLine },
-  { href: "/image-manager", label: "图片管理", icon: Images },
-  { href: "/channels", label: "渠道管理", icon: Waypoints },
-  { href: "/models", label: "模型管理", icon: BadgeDollarSign },
-  { href: "/redeem-codes", label: "兑换码", icon: Gift },
-  { href: "/logs", label: "日志", icon: FileText },
-  { href: "/settings", label: "设置", icon: Settings },
+  { href: "/image", label: "Generate", icon: Sparkles },
+  { href: "/users", label: "Users", icon: Users },
+  { href: "/accounts", label: "Account Pool", icon: Boxes },
+  { href: "/register", label: "Auto Register", icon: KeyRound },
+  { href: "/prompt-manager", label: "Prompts", icon: PenLine },
+  { href: "/image-manager", label: "Images", icon: Images },
+  { href: "/channels", label: "Channels", icon: Waypoints },
+  { href: "/models", label: "Models", icon: BadgeDollarSign },
+  { href: "/redeem-codes", label: "Redeem Codes", icon: Gift },
+  { href: "/logs", label: "Logs", icon: FileText },
+  { href: "/settings", label: "Settings", icon: Settings },
 ] satisfies NavItem[];
 
 const userNavItems = [
-  { href: "/image", label: "画图", icon: Sparkles },
-  { href: "/my-images", label: "我的图片", icon: Image },
-  { href: "/prompt-manager", label: "我的提示词", icon: PenLine },
-  { href: "/profile", label: "个人中心", icon: User },
+  { href: "/image", label: "Generate", icon: Sparkles },
+  { href: "/my-images", label: "My Images", icon: Image },
+  { href: "/prompt-manager", label: "My Prompts", icon: PenLine },
+  { href: "/profile", label: "Profile", icon: User },
 ] satisfies NavItem[];
 
 export function TopNav() {
@@ -85,17 +85,17 @@ export function TopNav() {
   }
 
   const navItems = session.role === "admin" ? adminNavItems : userNavItems;
-  const roleLabel = session.role === "admin" ? "管理员" : "个人用户";
+  const roleLabel = session.role === "admin" ? "Admin" : "Personal User";
 
   return (
     <header className="border-b border-rose-100/80 bg-white/48 backdrop-blur-xl">
       <div className="flex min-h-16 items-center justify-between gap-3 px-3 sm:px-5">
         <Link href="/image" className="group flex shrink-0 items-center gap-2.5 whitespace-nowrap">
           <span className="yan-mark-gradient grid size-10 place-items-center rounded-lg text-sm font-black text-white shadow-[0_14px_30px_rgba(243,111,159,0.22)] transition group-hover:brightness-105">
-            颜
+            Y
           </span>
           <span className="hidden leading-tight sm:block">
-            <span className="block text-[17px] font-bold tracking-tight text-stone-950">颜AI</span>
+            <span className="block text-[17px] font-bold tracking-tight text-stone-950">YanAI</span>
             <span className="block text-xs font-medium text-stone-500">Image Studio</span>
           </span>
         </Link>
@@ -133,7 +133,7 @@ export function TopNav() {
             type="button"
             className="inline-flex size-9 items-center justify-center rounded-lg text-stone-400 transition hover:bg-white/65 hover:text-rose-600"
             onClick={() => void handleLogout()}
-            aria-label="退出登录"
+            aria-label="Log out"
           >
             <LogOut className="size-4" />
           </button>

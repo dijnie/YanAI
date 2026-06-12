@@ -65,7 +65,7 @@ def create_router(app_version: str) -> APIRouter:
         available = 0
         for account in accounts:
             status = str(account.get("status") or "")
-            if status in {"禁用", "限流", "异常"}:
+            if status in {"Disabled", "Rate Limited", "Error"}:
                 continue
             try:
                 inflight = int(account.get("inflightCount") or account.get("inflight_count") or 0)

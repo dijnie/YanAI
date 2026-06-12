@@ -106,8 +106,8 @@ class ObservabilityTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp_dir:
             storage = DatabaseStorageBackend(f"sqlite:///{(Path(tmp_dir) / 'observability.db').as_posix()}")
             storage.save_accounts([
-                {"access_token": "token-a", "status": "正常", "quota": 3, "max_concurrency": 1},
-                {"access_token": "token-b", "status": "限流", "quota": 0, "max_concurrency": 1},
+                {"access_token": "token-a", "status": "Active", "quota": 3, "max_concurrency": 1},
+                {"access_token": "token-b", "status": "\u9650\u6d41", "quota": 0, "max_concurrency": 1},
             ])
             storage.repository_provider.image_records.insert(
                 {

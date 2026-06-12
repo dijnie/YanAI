@@ -383,7 +383,8 @@ def _reset_expired_account_lease(item: dict[str, Any], now: datetime) -> dict[st
 
 def _is_image_account_available(item: dict[str, Any]) -> bool:
     status = _clean(item.get("status"))
-    if status in {"禁用", "限流", "异常"}:
+    # "\u7981\u7528"/"\u9650\u6d41"/"\u5f02\u5e38" are legacy stored values (Disabled/Rate Limited/Error).
+    if status in {"Disabled", "Rate Limited", "Error", "\u7981\u7528", "\u9650\u6d41", "\u5f02\u5e38"}:
         return False
     if bool(item.get("image_quota_unknown")):
         return True
@@ -780,7 +781,8 @@ class SQLAlchemyAccountRepository(SQLAlchemyDatasetRepository, AccountRepository
     def _lease_candidate_statement(self, session: Session):
         statement = (
             select(AccountRow)
-            .where(or_(AccountRow.status.is_(None), AccountRow.status.not_in(["禁用", "限流", "异常"])))
+            # "\u7981\u7528"/"\u9650\u6d41"/"\u5f02\u5e38" are legacy stored values (Disabled/Rate Limited/Error).
+            .where(or_(AccountRow.status.is_(None), AccountRow.status.not_in(["Disabled", "Rate Limited", "Error", "\u7981\u7528", "\u9650\u6d41", "\u5f02\u5e38"])))
             .order_by(AccountRow.position.asc(), AccountRow.id.asc())
         )
         return statement
@@ -804,7 +806,7 @@ class SQLAlchemyAccountRepository(SQLAlchemyDatasetRepository, AccountRepository
 
     def _row_item(self, row: AccountRow) -> dict[str, Any]:
         item = _data_copy(row.data)
-        item.setdefault("status", row.status or "正常")
+        item.setdefault("status", row.status or "Normal")
         item.setdefault("quota", int(row.quota or 0))
         item.setdefault("lease_owner", row.lease_owner)
         item.setdefault("leased_until", row.leased_until)
@@ -851,10 +853,10 @@ class SQLAlchemyAccountRepository(SQLAlchemyDatasetRepository, AccountRepository
             if not image_quota_unknown:
                 next_item["quota"] = max(0, _non_negative_int(next_item.get("quota")) - 1)
             if not image_quota_unknown and _non_negative_int(next_item.get("quota")) == 0:
-                next_item["status"] = "限流"
+                next_item["status"] = "Rate Limited"
                 next_item["restore_at"] = next_item.get("restore_at") or None
-            elif next_item.get("status") == "限流":
-                next_item["status"] = "正常"
+            elif next_item.get("status") in ("Rate Limited", "\u9650\u6d41"):  # "\u9650\u6d41" is the legacy stored value
+                next_item["status"] = "Normal"
         else:
             next_item["fail"] = _non_negative_int(next_item.get("fail")) + 1
         next_item["updated_at"] = _iso(now)
@@ -1978,7 +1980,7 @@ class SQLAlchemyRepositoryProvider(RepositoryProvider):
         return {
             "type": "database",
             "db_type": self._db_type(),
-            "description": f"数据库存储 ({self._db_type()})",
+            "description": f"Database storage ({self._db_type()})",
             "database_url": self._mask_password(self.database_url),
             "repository": "sqlalchemy",
             "schema_version": SCHEMA_VERSION,

@@ -36,14 +36,14 @@ export function ImageSidebar({
           <div className="flex items-center gap-2">
             <Button className="h-10 flex-1 rounded-lg text-white" onClick={onCreateDraft}>
               <MessageSquarePlus className="size-4" />
-              新建对话
+              New Chat
             </Button>
             <Button
               variant="outline"
               className="h-10 rounded-lg border-rose-100 bg-white/75 px-3 text-stone-600 hover:bg-white"
               onClick={() => void onClearHistory()}
               disabled={conversations.length === 0}
-              aria-label="清空历史记录"
+              aria-label="ClearHistory"
             >
               <Trash2 className="size-4" />
             </Button>
@@ -54,11 +54,11 @@ export function ImageSidebar({
           {isLoadingHistory ? (
             <div className="flex items-center gap-2 px-2 py-3 text-sm text-stone-500">
               <LoaderCircle className="size-4 animate-spin" />
-              正在读取会话记录
+              Loading sessions
             </div>
           ) : conversations.length === 0 ? (
             <div className="rounded-lg border border-dashed border-rose-100 bg-white/45 px-3 py-4 text-sm leading-6 text-stone-500">
-              还没有图片记录，输入提示词后会在这里显示。
+              No image records yet. Enter a prompt and results will appear here.
             </div>
           ) : (
             conversations.map((conversation) => {
@@ -83,15 +83,15 @@ export function ImageSidebar({
                       <span className="truncate">{conversation.title}</span>
                     </div>
                     <div className={cn("mt-1 text-xs", active ? "text-white/62" : "text-stone-400")}>
-                      {conversation.turns.length} 轮 · {formatConversationTime(conversation.updatedAt)}
+                      {conversation.turns.length} turns - {formatConversationTime(conversation.updatedAt)}
                     </div>
                     {stats.running > 0 || stats.queued > 0 ? (
                       <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
                         {stats.running > 0 ? (
-                          <span className="rounded-full bg-pink-50 px-2 py-1 text-pink-600">处理中 {stats.running}</span>
+                          <span className="rounded-full bg-pink-50 px-2 py-1 text-pink-600">Running {stats.running}</span>
                         ) : null}
                         {stats.queued > 0 ? (
-                          <span className="rounded-full bg-amber-50 px-2 py-1 text-amber-700">排队 {stats.queued}</span>
+                          <span className="rounded-full bg-amber-50 px-2 py-1 text-amber-700">Queued {stats.queued}</span>
                         ) : null}
                       </div>
                     ) : null}
@@ -105,7 +105,7 @@ export function ImageSidebar({
                         ? "text-white/55 hover:bg-white/10 hover:text-white"
                         : "text-stone-400 hover:bg-rose-50 hover:text-rose-500",
                     )}
-                    aria-label="删除会话"
+                    aria-label="Delete Conversation"
                   >
                     <Trash2 className="size-4" />
                   </button>

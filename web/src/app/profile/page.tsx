@@ -36,7 +36,7 @@ type ImageChannelForm = {
 
 const emptyImageChannelForm = (): ImageChannelForm => ({
   enabled: false,
-  name: "个人生图渠道",
+  name: "Personal Image Channel",
   base_url: "",
   api_key: "",
   models: DEFAULT_CHANNEL_MODELS,
@@ -46,7 +46,7 @@ const emptyImageChannelForm = (): ImageChannelForm => ({
 
 const channelToForm = (channel?: UserImageChannel | null): ImageChannelForm => ({
   enabled: Boolean(channel?.enabled),
-  name: channel?.name || "个人生图渠道",
+  name: channel?.name || "Personal Image Channel",
   base_url: channel?.base_url || "",
   api_key: "",
   models: channel?.models?.join(",") || DEFAULT_CHANNEL_MODELS,
@@ -92,7 +92,7 @@ function ProfileContent() {
       setName(me.user.name || "");
       setChannelForm(channelToForm(imageChannel.channel));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "加载个人信息失败");
+      toast.error(error instanceof Error ? error.message : "Failed to load profile");
     } finally {
       setIsLoading(false);
     }
@@ -107,9 +107,9 @@ function ProfileContent() {
     try {
       const data = await updateMyProfile({ name: name.trim() });
       setUser(data.user);
-      toast.success("资料已保存");
+      toast.success("Profile saved");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "保存失败");
+      toast.error(error instanceof Error ? error.message : "Failed to save");
     } finally {
       setIsSaving(false);
     }
@@ -131,9 +131,9 @@ function ProfileContent() {
       setUser(data.user);
       setChannelForm(channelToForm(data.channel));
       setChannelTestMessage(null);
-      toast.success("个人生图渠道已保存");
+      toast.success("Personal image channel saved");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "保存个人生图渠道失败");
+      toast.error(error instanceof Error ? error.message : "Failed to save personal image channel");
     } finally {
       setIsSavingChannel(false);
     }
@@ -147,8 +147,8 @@ function ProfileContent() {
         test_models: uniqueModels(channelForm.models),
       });
       const text = result.ok
-        ? `${result.tested_models.length || result.model_count} 个模型可用 · ${result.latency_ms}ms`
-        : result.error || "模型测试失败";
+        ? `${result.tested_models.length || result.model_count} models available - ${result.latency_ms}ms`
+        : result.error || "Model test failed";
       setChannelTestMessage({ ok: result.ok, text });
       if (result.ok) {
         toast.success(text);
@@ -156,7 +156,7 @@ function ProfileContent() {
         toast.error(text);
       }
     } catch (error) {
-      const text = error instanceof Error ? error.message : "模型测试失败";
+      const text = error instanceof Error ? error.message : "Model test failed";
       setChannelTestMessage({ ok: false, text });
       toast.error(text);
     } finally {
@@ -169,9 +169,9 @@ function ProfileContent() {
       const data = await redeemMyCode(code.trim());
       setUser(data.user);
       setCode("");
-      toast.success(`兑换成功，增加 ${data.redeem_code.quota} 点额度`);
+      toast.success(`Redeemed successfully, added ${data.redeem_code.quota} quota points`);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "兑换失败");
+      toast.error(error instanceof Error ? error.message : "Failed to redeem");
     }
   };
 
@@ -187,7 +187,7 @@ function ProfileContent() {
     <section className="mx-auto w-full max-w-5xl space-y-5">
       <div className="space-y-1">
         <div className="text-xs font-semibold tracking-[0.18em] text-rose-400 uppercase">Profile</div>
-        <h1 className="text-2xl font-semibold tracking-tight">个人中心</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Profile</h1>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -195,18 +195,18 @@ function ProfileContent() {
           <CardContent className="space-y-5 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm text-stone-500">当前账号</div>
+                <div className="text-sm text-stone-500">Current Account</div>
                 <div className="mt-1 text-lg font-semibold text-stone-950">{user?.email}</div>
               </div>
               <Badge variant={user?.status === "disabled" ? "secondary" : "success"}>
-                {user?.status === "disabled" ? "已禁用" : "正常"}
+                {user?.status === "disabled" ? "Disabled" : "Normal"}
               </Badge>
             </div>
             <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-              <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="昵称" className="h-11 rounded-xl border-rose-100 bg-white" />
+              <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Nickname" className="h-11 rounded-xl border-rose-100 bg-white" />
               <Button className="h-11 rounded-xl bg-rose-500 text-white hover:bg-rose-600" onClick={() => void handleSave()} disabled={isSaving}>
                 {isSaving ? <LoaderCircle className="size-4 animate-spin" /> : <Save className="size-4" />}
-                保存资料
+                Save Profile
               </Button>
             </div>
           </CardContent>
@@ -217,9 +217,9 @@ function ProfileContent() {
             <div className="rounded-2xl bg-rose-50 p-3 text-rose-500 w-fit">
               <Sparkles className="size-5" />
             </div>
-            <div className="text-sm text-stone-500">可用额度</div>
+            <div className="text-sm text-stone-500">Available Quota</div>
             <div className="text-4xl font-semibold text-rose-600">{user?.quota ?? 0}</div>
-            <div className="text-xs text-stone-400">已消耗 {user?.spent_quota ?? user?.quota_used ?? 0} 点</div>
+            <div className="text-xs text-stone-400">{user?.spent_quota ?? user?.quota_used ?? 0} points spent</div>
           </CardContent>
         </Card>
       </div>
@@ -229,24 +229,24 @@ function ProfileContent() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2 text-sm font-semibold text-stone-800">
               <Waypoints className="size-4 text-rose-500" />
-              个人生图渠道
+              Personal Image Channel
             </div>
             <label className="flex items-center gap-2 text-sm font-medium text-stone-700">
               <Checkbox
                 checked={channelForm.enabled}
                 onCheckedChange={(checked) => setChannelForm((current) => ({ ...current, enabled: checked === true }))}
               />
-              启用
+              Enabled
             </label>
           </div>
 
           <div className="grid gap-3 md:grid-cols-2">
             <label className="space-y-1.5 text-xs font-semibold text-stone-700">
-              <span>名称</span>
+              <span>Name</span>
               <Input
                 value={channelForm.name}
                 onChange={(event) => setChannelForm((current) => ({ ...current, name: event.target.value }))}
-                placeholder="个人生图渠道"
+                placeholder="Personal Image Channel"
                 className="h-10 rounded-xl border-rose-100 bg-white text-sm font-normal"
               />
             </label>
@@ -265,13 +265,13 @@ function ProfileContent() {
                 type="password"
                 value={channelForm.api_key}
                 onChange={(event) => setChannelForm((current) => ({ ...current, api_key: event.target.value }))}
-                placeholder={channelForm.hasApiKey ? "留空保留当前密钥" : "sk-..."}
+                placeholder={channelForm.hasApiKey ? "Leave empty to keep the current key" : "sk-..."}
                 autoComplete="new-password"
                 className="h-10 rounded-xl border-rose-100 bg-white text-sm font-normal"
               />
             </label>
             <label className="space-y-1.5 text-xs font-semibold text-stone-700">
-              <span>超时秒数</span>
+              <span>Timeout (s)</span>
               <Input
                 type="number"
                 value={channelForm.timeout}
@@ -281,7 +281,7 @@ function ProfileContent() {
               />
             </label>
             <label className="space-y-1.5 text-xs font-semibold text-stone-700 md:col-span-2">
-              <span>模型</span>
+              <span>Models</span>
               <Textarea
                 value={channelForm.models}
                 onChange={(event) => setChannelForm((current) => ({ ...current, models: event.target.value }))}
@@ -298,7 +298,7 @@ function ProfileContent() {
               </div>
             ) : (
               <div className="text-xs text-stone-400">
-                {channelForm.hasApiKey ? "已保存密钥" : "未保存密钥"}
+                {channelForm.hasApiKey ? "API key saved" : "No API key saved"}
               </div>
             )}
             <div className="flex gap-2">
@@ -309,7 +309,7 @@ function ProfileContent() {
                 onClick={() => void handleTestChannel()}
               >
                 {isTestingChannel ? <LoaderCircle className="size-4 animate-spin" /> : <TestTube className="size-4" />}
-                测试
+                Test
               </Button>
               <Button
                 className="h-10 rounded-xl bg-rose-500 text-white hover:bg-rose-600"
@@ -317,7 +317,7 @@ function ProfileContent() {
                 onClick={() => void handleSaveChannel()}
               >
                 {isSavingChannel ? <LoaderCircle className="size-4 animate-spin" /> : <Save className="size-4" />}
-                保存渠道
+                Save Channel
               </Button>
             </div>
           </div>
@@ -328,12 +328,12 @@ function ProfileContent() {
         <CardContent className="space-y-4 p-6">
           <div className="flex items-center gap-2 text-sm font-semibold text-stone-800">
             <Gift className="size-4 text-rose-500" />
-            兑换额度
+            Redeem Quota
           </div>
           <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-            <Input value={code} onChange={(event) => setCode(event.target.value)} placeholder="输入兑换码" className="h-11 rounded-xl border-rose-100 bg-white uppercase" />
+            <Input value={code} onChange={(event) => setCode(event.target.value)} placeholder="Enter redeem code" className="h-11 rounded-xl border-rose-100 bg-white uppercase" />
             <Button className="h-11 rounded-xl bg-rose-500 text-white hover:bg-rose-600" onClick={() => void handleRedeem()}>
-              立即兑换
+              Redeem Now
             </Button>
           </div>
         </CardContent>

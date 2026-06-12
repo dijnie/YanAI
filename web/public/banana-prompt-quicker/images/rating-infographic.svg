@@ -1,14 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="720" viewBox="0 0 960 720" role="img" aria-label="锐评信息图示例图">
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="720" viewBox="0 0 960 720" role="img" aria-label="Example of Ruiping infographic">
   <rect width="960" height="720" fill="#111827"/>
   <rect x="92" y="74" width="776" height="120" rx="24" fill="#ef4444"/>
   <rect x="92" y="216" width="776" height="96" rx="22" fill="#f97316"/>
   <rect x="92" y="334" width="776" height="86" rx="20" fill="#facc15"/>
   <rect x="92" y="442" width="776" height="74" rx="18" fill="#d6d3d1"/>
   <rect x="92" y="538" width="776" height="106" rx="22" fill="#020617" stroke="#f8fafc" stroke-width="3"/>
-  <text x="134" y="152" fill="#fff" font-family="Arial, sans-serif" font-size="52" font-weight="800">夯</text>
-  <text x="134" y="277" fill="#fff" font-family="Arial, sans-serif" font-size="42" font-weight="800">顶级</text>
-  <text x="134" y="389" fill="#111827" font-family="Arial, sans-serif" font-size="36" font-weight="800">人上人</text>
+  <text x="134" y="152" fill="#fff" font-family="Arial, sans-serif" font-size="52" font-weight="800">ram</text>
+  <text x="134" y="277" fill="#fff" font-family="Arial, sans-serif" font-size="42" font-weight="800">Top</text>
+  <text x="134" y="389" fill="#111827" font-family="Arial, sans-serif" font-size="36" font-weight="800">human jonin</text>
   <text x="134" y="490" fill="#44403c" font-family="Arial, sans-serif" font-size="32" font-weight="800">NPC</text>
-  <text x="134" y="604" fill="#f8fafc" font-family="Arial, sans-serif" font-size="40" font-weight="800">拉完了</text>
+  <text x="134" y="604" fill="#f8fafc" font-family="Arial, sans-serif" font-size="40" font-weight="800">Finished</text>
   <text x="372" y="612" fill="#94a3b8" font-family="Arial, sans-serif" font-size="26">Bento grid rating infographic</text>
 </svg>

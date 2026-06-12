@@ -95,7 +95,7 @@ function formatConversationTime(value: string) {
 }
 
 function formatAvailableQuota(accounts: Account[]) {
-  const availableAccounts = accounts.filter((account) => account.status !== "禁用");
+  const availableAccounts = accounts.filter((account) => account.status !== "Disabled");
   return String(availableAccounts.reduce((sum, account) => sum + Math.max(0, account.quota), 0));
 }
 
@@ -110,7 +110,7 @@ function readFileAsDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result || ""));
-    reader.onerror = () => reject(new Error("读取参考图失败"));
+    reader.onerror = () => reject(new Error("Failed to read reference image"));
     reader.readAsDataURL(file);
   });
 }
@@ -129,7 +129,7 @@ function dataUrlToFile(dataUrl: string, fileName: string, mimeType?: string) {
 async function imageUrlToFile(url: string, fileName: string) {
   const response = await fetch(resolveApiAssetUrl(url));
   if (!response.ok) {
-    throw new Error(`读取生成图失败 (${response.status})`);
+    throw new Error(`Failed to read generated image (${response.status})`);
   }
   const blob = await response.blob();
   const mimeType = blob.type || "image/png";
@@ -264,7 +264,7 @@ async function recoverConversationHistory(
 
       const loadingCount = turn.images.filter((image) => image.status === "loading").length;
       if (turn.status === "generating" && loadingCount > 0 && !isConversationQueueActive) {
-        const message = "页面刷新或任务中断，未完成的图片已标记为失败";
+        const message = "Page refreshed or task interrupted; unfinished images were marked as failed";
         changed = true;
         return {
           ...turn,
@@ -284,7 +284,7 @@ async function recoverConversationHistory(
       const successCount = turn.images.filter((image) => image.status === "success").length;
       const nextStatus: ImageTurnStatus =
         failedCount > 0 ? "error" : successCount > 0 ? "success" : "queued";
-      const nextError = failedCount > 0 ? turn.error || `其中 ${failedCount} 张未成功生成` : undefined;
+      const nextError = failedCount > 0 ? turn.error || `${failedCount} image(s) failed to generate` : undefined;
       if (nextStatus === turn.status && nextError === turn.error) {
         return turn;
       }
@@ -338,7 +338,7 @@ function ImagePageContent({ session }: { session: StoredAuthSession }) {
   const [conversations, setConversations] = useState<ImageConversation[]>([]);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
-  const [availableQuota, setAvailableQuota] = useState("加载中...");
+  const [availableQuota, setAvailableQuota] = useState("Loading...");
   const [lightboxImages, setLightboxImages] = useState<ImageLightboxItem[]>([]);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
@@ -374,12 +374,12 @@ function ImagePageContent({ session }: { session: StoredAuthSession }) {
     [conversations, workspaceSearch],
   );
   const workspaceStats = useMemo(() => getWorkspaceStats(conversations), [conversations]);
-  const deleteConfirmTitle = deleteConfirm?.type === "all" ? "清空历史记录" : deleteConfirm?.type === "one" ? "删除对话" : "";
+  const deleteConfirmTitle = deleteConfirm?.type === "all" ? "Clear History" : deleteConfirm?.type === "one" ? "Delete Conversation" : "";
   const deleteConfirmDescription =
     deleteConfirm?.type === "all"
-      ? "确认删除全部图片历史记录吗？删除后无法恢复。"
+      ? "Delete all image history? This cannot be undone."
       : deleteConfirm?.type === "one"
-        ? "确认删除这条图片对话吗？删除后无法恢复。"
+        ? "Delete this image conversation? This cannot be undone."
         : "";
 
   const getComposerPanelWidthBounds = useCallback(() => {
@@ -540,7 +540,7 @@ function ImagePageContent({ session }: { session: StoredAuthSession }) {
           );
         });
       } catch (error) {
-        const message = error instanceof Error ? error.message : "读取会话记录失败";
+        const message = error instanceof Error ? error.message : "Failed to load conversation history";
         toast.error(message);
       } finally {
         if (!cancelled) {
@@ -579,7 +579,7 @@ function ImagePageContent({ session }: { session: StoredAuthSession }) {
       const data = await fetchAccounts();
       setAvailableQuota(formatAvailableQuota(data.items));
     } catch {
-      setAvailableQuota((prev) => (prev === "加载中..." ? "--" : prev));
+      setAvailableQuota((prev) => (prev === "Loading..." ? "--" : prev));
     }
   }, [isAdmin]);
 
@@ -714,7 +714,7 @@ function ImagePageContent({ session }: { session: StoredAuthSession }) {
     try {
       await deleteImageConversation(id, imageConversationOwnerKey);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "删除会话失败";
+      const message = error instanceof Error ? error.message : "Failed to delete conversation";
       toast.error(message);
       const items = await listImageConversations(imageConversationOwnerKey);
       conversationsRef.current = items;
@@ -729,9 +729,9 @@ function ImagePageContent({ session }: { session: StoredAuthSession }) {
       setConversations([]);
       setSelectedConversationId(null);
       resetComposer();
-      toast.success("已清空历史记录");
+      toast.success("History cleared");
     } catch (error) {
-      const message = error instanceof Error ? error.message : "清空历史记录失败";
+      const message = error instanceof Error ? error.message : "Failed to clear history";
       toast.error(message);
     }
   };
@@ -780,7 +780,7 @@ function ImagePageContent({ session }: { session: StoredAuthSession }) {
         fileInputRef.current.value = "";
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : "读取参考图失败";
+      const message = error instanceof Error ? error.message : "Failed to read reference image";
       toast.error(message);
     }
   }, []);
@@ -818,7 +818,7 @@ function ImagePageContent({ session }: { session: StoredAuthSession }) {
               }
             : await buildReferenceImageFromResult(image, `conversation-${conversationId}-${Date.now()}.png`);
         if (!preparedReference) {
-          toast.error("这张图没有可用于继续编辑的数据");
+          toast.error("This image has no data available for further editing");
           return;
         }
 
@@ -828,9 +828,9 @@ function ImagePageContent({ session }: { session: StoredAuthSession }) {
         setReferenceImageFiles((prev) => [...prev, preparedReference.file]);
         setImagePrompt("");
         textareaRef.current?.focus();
-        toast.success("已加入当前参考图，继续输入描述即可编辑");
+        toast.success("Added as a reference image; enter a description to continue editing");
       } catch (error) {
-        const message = error instanceof Error ? error.message : "读取生成图失败";
+        const message = error instanceof Error ? error.message : "Failed to read generated image";
         toast.error(message);
       }
     },
@@ -886,7 +886,7 @@ function ImagePageContent({ session }: { session: StoredAuthSession }) {
         const pendingImages = queuedTurn.images.filter((image) => image.status === "loading");
 
         if (queuedTurn.mode === "edit" && referenceFiles.length === 0) {
-          throw new Error("未找到可用于继续编辑的参考图");
+          throw new Error("No reference image available for further editing");
         }
 
         if (pendingImages.length === 0) {
@@ -902,7 +902,7 @@ function ImagePageContent({ session }: { session: StoredAuthSession }) {
                   ? {
                       ...turn,
                       status: existingFailedCount > 0 ? "error" : existingSuccessCount > 0 ? "success" : "queued",
-                      error: existingFailedCount > 0 ? `其中 ${existingFailedCount} 张未成功生成` : undefined,
+                      error: existingFailedCount > 0 ? `${existingFailedCount} image(s) failed to generate` : undefined,
                     }
                   : turn,
               ),
@@ -919,7 +919,7 @@ function ImagePageContent({ session }: { session: StoredAuthSession }) {
                 : await generateImage(queuedTurn.prompt, queuedTurn.model, queuedTurn.size);
             const first = data.data?.[0];
             if (!first?.b64_json && !first?.url) {
-              throw new Error("未返回图片数据");
+              throw new Error("No image data returned");
             }
 
             const nextImage: StoredImage = first.url
@@ -956,7 +956,7 @@ function ImagePageContent({ session }: { session: StoredAuthSession }) {
 
             return nextImage;
           } catch (error) {
-            const message = error instanceof Error ? error.message : "生成失败";
+            const message = error instanceof Error ? error.message : "Generation failed";
             const failedImage: StoredImage = {
               id: pendingImage.id,
               status: "error",
@@ -1007,7 +1007,7 @@ function ImagePageContent({ session }: { session: StoredAuthSession }) {
                 ? {
                     ...turn,
                     status: failedCount > 0 ? "error" : "success",
-                    error: failedCount > 0 ? `其中 ${failedCount} 张未成功生成` : undefined,
+                    error: failedCount > 0 ? `${failedCount} image(s) failed to generate` : undefined,
                   }
                 : turn,
             ),
@@ -1016,7 +1016,7 @@ function ImagePageContent({ session }: { session: StoredAuthSession }) {
 
         await loadQuota();
       } catch (error) {
-        const message = error instanceof Error ? error.message : "生成图片失败";
+        const message = error instanceof Error ? error.message : "Failed to generate image";
         await updateConversation(conversationId, (current) => {
           const conversation = current ?? snapshot;
           return {
@@ -1068,12 +1068,12 @@ function ImagePageContent({ session }: { session: StoredAuthSession }) {
   const handleSubmit = async () => {
     const prompt = imagePrompt.trim();
     if (!prompt) {
-      toast.error("请输入提示词");
+      toast.error("Enter a prompt");
       return;
     }
 
     if (imageMode === "edit" && referenceImageFiles.length === 0) {
-      toast.error("请先上传参考图");
+      toast.error("Upload a reference image first");
       return;
     }
 
@@ -1123,11 +1123,11 @@ function ImagePageContent({ session }: { session: StoredAuthSession }) {
 
     const targetStats = getImageConversationStats(baseConversation);
     if (targetStats.running > 0 || targetStats.queued > 1) {
-      toast.success("已加入当前对话队列");
+      toast.success("Added to the current conversation queue");
     } else if (!targetConversation) {
-      toast.success("已创建新对话并开始处理");
+      toast.success("New conversation created and processing started");
     } else {
-      toast.success("已发送到当前对话");
+      toast.success("Sent to the current conversation");
     }
   };
 
@@ -1154,7 +1154,7 @@ function ImagePageContent({ session }: { session: StoredAuthSession }) {
 
         <Dialog open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
           <DialogContent className="flex h-[88vh] w-[92vw] max-w-[430px] flex-col overflow-hidden rounded-lg p-0">
-            <DialogTitle className="sr-only">历史记录</DialogTitle>
+            <DialogTitle className="sr-only">History</DialogTitle>
             <ImageStudioSidebar
               conversations={filteredConversations}
               isLoadingHistory={isLoadingHistory}
@@ -1183,11 +1183,11 @@ function ImagePageContent({ session }: { session: StoredAuthSession }) {
               onClick={() => setIsHistoryOpen(true)}
             >
               <Menu className="mr-2 size-4" />
-              历史记录 ({conversations.length})
+              History ({conversations.length})
             </Button>
             <Button className="h-10 rounded-lg text-white shadow-sm" onClick={handleCreateDraft}>
               <Plus className="size-4" />
-              新建
+              New
             </Button>
             <Button
               variant="outline"
@@ -1201,9 +1201,9 @@ function ImagePageContent({ session }: { session: StoredAuthSession }) {
 
           <header className="yan-panel flex min-h-16 flex-col gap-3 rounded-lg px-4 py-3 md:flex-row md:items-center">
             <div className="min-w-0 flex-1">
-              <h1 className="truncate text-2xl font-bold tracking-tight text-stone-950">月光影像创作台</h1>
+              <h1 className="truncate text-2xl font-bold tracking-tight text-stone-950">Moonlight Image Studio</h1>
               <p className="mt-1 truncate text-sm text-stone-500">
-                gpt-image-2 · 创作队列 {workspaceStats.active} · 当前空间 颜AI Studio
+                gpt-image-2 - Creation queue {workspaceStats.active} - Current workspace YanAI Studio
               </p>
             </div>
             <label className="relative w-full md:max-w-[360px]">
@@ -1211,31 +1211,31 @@ function ImagePageContent({ session }: { session: StoredAuthSession }) {
               <input
                 value={workspaceSearch}
                 onChange={(event) => setWorkspaceSearch(event.target.value)}
-                placeholder="搜索作品、提示词、会话"
+                placeholder="Search works, prompts, sessions"
                 className="h-10 w-full rounded-lg border border-[var(--yan-border)] bg-white/72 pl-9 pr-3 text-sm text-stone-700 outline-none transition placeholder:text-stone-400 focus:border-rose-200 focus:bg-white focus:ring-4 focus:ring-rose-100/60"
               />
             </label>
           </header>
 
           <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-4">
-            <WorkspaceMetric label="今日生成" value={workspaceStats.todayGenerated} />
-            <WorkspaceMetric label="成功率" value={workspaceStats.successRate} />
-            <WorkspaceMetric label="处理中" value={workspaceStats.active} />
-            <WorkspaceMetric label="历史作品" value={workspaceStats.successImages} />
+            <WorkspaceMetric label="Generated Today" value={workspaceStats.todayGenerated} />
+            <WorkspaceMetric label="Success Rate" value={workspaceStats.successRate} />
+            <WorkspaceMetric label="Running" value={workspaceStats.active} />
+            <WorkspaceMetric label="Past Works" value={workspaceStats.successImages} />
           </div>
 
           <div className="min-h-0 flex-1 overflow-hidden">
             <div ref={resultsViewportRef} className="yan-panel h-full min-h-0 overflow-y-auto rounded-lg">
               <div className="sticky top-0 z-10 flex items-center justify-between border-b border-rose-100/70 bg-white/72 px-4 py-3 backdrop-blur-xl">
                 <div className="min-w-0">
-                  <h2 className="text-base font-bold text-stone-950">生成画面</h2>
+                  <h2 className="text-base font-bold text-stone-950">Generated Images</h2>
                   <p className="truncate text-sm text-stone-500">
-                    {selectedConversation ? `${selectedConversation.turns.length} 轮创作 · 精选结果` : "选择会话或新建创作"}
+                    {selectedConversation ? `${selectedConversation.turns.length}  turns - selected results` : "Select a session or start a new creation"}
                   </p>
                 </div>
                 <div className="hidden items-center gap-2 text-xs font-medium text-stone-400 sm:flex">
-                  <span>{workspaceStats.queued} 排队</span>
-                  <span>{workspaceStats.running} 运行中</span>
+                  <span>{workspaceStats.queued} queued</span>
+                  <span>{workspaceStats.running} running</span>
                 </div>
               </div>
               <div className="px-3 py-4 sm:px-4">
@@ -1257,7 +1257,7 @@ function ImagePageContent({ session }: { session: StoredAuthSession }) {
         >
           <button
             type="button"
-            aria-label="调整 Prompt 面板宽度"
+            aria-label="Resize prompt panel"
             onPointerDown={handleComposerPanelResizeStart}
             className="group absolute top-0 bottom-0 left-0 z-20 hidden w-3 cursor-col-resize items-center justify-center outline-none xl:flex"
           >
@@ -1304,10 +1304,10 @@ function ImagePageContent({ session }: { session: StoredAuthSession }) {
             </DialogHeader>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDeleteConfirm(null)}>
-                取消
+                Cancel
               </Button>
               <Button className="bg-rose-600 text-white hover:bg-rose-700" onClick={() => void handleConfirmDelete()}>
-                确认删除
+                Confirm Delete
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -1344,8 +1344,8 @@ function ImageStudioSidebar({
         <div className="min-h-[320px]">
           <div className="mb-3 flex items-center justify-between gap-2">
             <div>
-              <div className="text-xs font-bold text-stone-500">最近会话</div>
-              <div className="mt-1 text-[11px] text-stone-400">{conversations.length} 条记录</div>
+              <div className="text-xs font-bold text-stone-500">Recent Sessions</div>
+              <div className="mt-1 text-[11px] text-stone-400">{conversations.length} records</div>
             </div>
           </div>
           <ImageSidebar
@@ -1363,7 +1363,7 @@ function ImageStudioSidebar({
 
       <div className="border-t border-rose-100/70 p-3">
         <div className="rounded-lg bg-gradient-to-br from-white/80 to-rose-50/80 p-3">
-          <div className="text-sm text-stone-500">本地额度</div>
+          <div className="text-sm text-stone-500">Local Quota</div>
           <div className="mt-1 text-3xl font-bold tracking-tight text-stone-950">{availableQuota}</div>
         </div>
       </div>

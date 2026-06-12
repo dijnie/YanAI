@@ -30,7 +30,7 @@ export default function OAuthCallbackPage() {
     const token = params.get("token") || "";
     const role = params.get("role") === "admin" ? "admin" : "user";
     if (!token) {
-      toast.error("OAuth 登录未返回有效会话");
+      toast.error("OAuth login did not return a valid session");
       router.replace("/login");
       return;
     }

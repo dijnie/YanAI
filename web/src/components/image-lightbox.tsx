@@ -76,14 +76,14 @@ export function ImageLightbox({
           onPointerDownOutside={(e) => e.preventDefault()}
         >
           <DialogPrimitive.Title className="sr-only">
-            图片预览
+            Image preview
           </DialogPrimitive.Title>
 
           {/* toolbar */}
           <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
             {current.sizeLabel || current.dimensions ? (
               <span className="rounded-full bg-black/50 px-3 py-1.5 text-xs font-medium text-white/90">
-                {[current.sizeLabel, current.dimensions].filter(Boolean).join(" · ")}
+                {[current.sizeLabel, current.dimensions].filter(Boolean).join(" - ")}
               </span>
             ) : null}
             {images.length > 1 && (
@@ -95,13 +95,13 @@ export function ImageLightbox({
               type="button"
               onClick={handleDownload}
               className="inline-flex size-9 items-center justify-center rounded-full bg-black/50 text-white/90 transition hover:bg-black/70"
-              aria-label="下载图片"
+              aria-label="Download image"
             >
               <Download className="size-4" />
             </button>
             <DialogPrimitive.Close className="inline-flex size-9 items-center justify-center rounded-full bg-black/50 text-white/90 transition hover:bg-black/70">
               <X className="size-4" />
-              <span className="sr-only">关闭</span>
+              <span className="sr-only">Close</span>
             </DialogPrimitive.Close>
           </div>
 
@@ -111,7 +111,7 @@ export function ImageLightbox({
               type="button"
               onClick={goPrev}
               className="absolute left-4 z-10 inline-flex size-10 items-center justify-center rounded-full bg-black/40 text-white/90 transition hover:bg-black/60"
-              aria-label="上一张"
+              aria-label="Previous image"
             >
               <ChevronLeft className="size-5" />
             </button>
@@ -137,7 +137,7 @@ export function ImageLightbox({
               type="button"
               onClick={goNext}
               className="absolute right-4 z-10 inline-flex size-10 items-center justify-center rounded-full bg-black/40 text-white/90 transition hover:bg-black/60"
-              aria-label="下一张"
+              aria-label="Next image"
             >
               <ChevronRight className="size-5" />
             </button>

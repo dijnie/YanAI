@@ -93,7 +93,7 @@ def _stable_id(raw: dict[str, Any]) -> str:
 
 def _normalize_mode(value: object) -> str:
     normalized = _clean(value).lower()
-    if normalized in {"edit", "image", "image-to-image", "i2i", "图生图"}:
+    if normalized in {"edit", "image", "image-to-image", "i2i", "\u56fe\u751f\u56fe"}:  # "\u56fe\u751f\u56fe" is a legacy stored value (image-to-image)
         return "edit"
     return "generate"
 
@@ -291,7 +291,7 @@ class PromptLibraryService:
         bootstrap_items = self._load_bootstrap_items()
         default_items = [
             item for item in bootstrap_items
-            if item.get("quick_access") or item.get("category") == "内置快捷"
+            if item.get("quick_access") or item.get("category") in ("Built-in Quick", "Built-in Quick")  # "Built-in Quick" is the legacy stored value
         ]
         if not default_items:
             return stored_items

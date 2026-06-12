@@ -13,7 +13,7 @@ from services.storage.base import StorageBackend
 
 
 class GitStorageBackend(StorageBackend):
-    """Git 私有仓库存储后端"""
+    """Private Git repository storage backend."""
 
     def __init__(
         self,
@@ -42,28 +42,28 @@ class GitStorageBackend(StorageBackend):
         self.prompt_library_file_path = prompt_library_file_path
         self.image_records_file_path = image_records_file_path
         
-        # 本地缓存目录
+        # Local cache directory
         if local_cache_dir is None:
             local_cache_dir = Path(tempfile.gettempdir()) / "chatgpt2api_git_cache"
         self.local_cache_dir = local_cache_dir
         self.local_cache_dir.mkdir(parents=True, exist_ok=True)
         
-        # 构建带认证的 Git URL
+        # Build the authenticated Git URL
         self.auth_repo_url = self._build_auth_url(repo_url, token)
 
     @staticmethod
     def _build_auth_url(repo_url: str, token: str) -> str:
-        """构建带认证的 Git URL"""
+        """Build the authenticated Git URL."""
         if not token:
             return repo_url
         
-        # 支持 HTTPS 格式：https://github.com/user/repo.git
+        # Supports HTTPS format: https://github.com/user/repo.git
         if repo_url.startswith("https://"):
-            # 插入 token
+            # Insert the token
             return repo_url.replace("https://", f"https://{token}@")
         
-        # 支持 git@ 格式：git@github.com:user/repo.git
-        # 转换为 HTTPS 格式
+        # Supports git@ format: git@github.com:user/repo.git
+        # Convert to HTTPS format
         if repo_url.startswith("git@"):
             repo_url = repo_url.replace("git@", "https://")
             repo_url = repo_url.replace(".com:", ".com/")
@@ -72,21 +72,21 @@ class GitStorageBackend(StorageBackend):
         return repo_url
 
     def _clone_or_pull(self) -> Repo:
-        """克隆或拉取仓库"""
+        """Clone or pull the repository."""
         repo_path = self.local_cache_dir / "repo"
         
         if repo_path.exists() and (repo_path / ".git").exists():
-            # 仓库已存在，拉取最新代码
+            # Repository already exists; pull the latest changes
             try:
                 repo = Repo(repo_path)
                 origin = repo.remote("origin")
                 origin.pull(self.branch)
                 return repo
             except GitCommandError:
-                # 拉取失败，删除重新克隆
+                # Pull failed; delete and re-clone
                 shutil.rmtree(repo_path)
         
-        # 克隆仓库
+        # Clone the repository
         repo = Repo.clone_from(
             self.auth_repo_url,
             repo_path,
@@ -95,7 +95,7 @@ class GitStorageBackend(StorageBackend):
         return repo
 
     def load_accounts(self) -> list[dict[str, Any]]:
-        """从 Git 仓库加载账号数据"""
+        """Load account data from the Git repository."""
         try:
             return self._load_json_file(self.file_path)
         except Exception as e:
@@ -103,7 +103,7 @@ class GitStorageBackend(StorageBackend):
             raise
 
     def save_accounts(self, accounts: list[dict[str, Any]]) -> None:
-        """保存账号数据到 Git 仓库"""
+        """Save account data to the Git repository."""
         try:
             self._save_json_file(self.file_path, accounts, "Update accounts data")
         except Exception as e:
@@ -111,7 +111,7 @@ class GitStorageBackend(StorageBackend):
             raise e
 
     def load_auth_keys(self) -> list[dict[str, Any]]:
-        """从 Git 仓库加载鉴权密钥数据"""
+        """Load auth key data from the Git repository."""
         try:
             data = self._load_json_value(self.auth_keys_file_path)
             if isinstance(data, dict):
@@ -122,7 +122,7 @@ class GitStorageBackend(StorageBackend):
             raise
 
     def save_auth_keys(self, auth_keys: list[dict[str, Any]]) -> None:
-        """保存鉴权密钥数据到 Git 仓库"""
+        """Save auth key data to the Git repository."""
         try:
             self._save_json_file(self.auth_keys_file_path, {"items": auth_keys}, "Update auth keys data")
         except Exception as e:
@@ -190,7 +190,7 @@ class GitStorageBackend(StorageBackend):
             repo.remote("origin").push(self.branch)
 
     def health_check(self) -> dict[str, Any]:
-        """健康检查"""
+        """Health check."""
         try:
             repo = self._clone_or_pull()
             return {
@@ -216,10 +216,10 @@ class GitStorageBackend(StorageBackend):
             }
 
     def get_backend_info(self) -> dict[str, Any]:
-        """获取存储后端信息"""
+        """Get storage backend information."""
         return {
             "type": "git",
-            "description": "Git 私有仓库存储",
+            "description": "Private Git repository storage",
             "repo_url": self._mask_token(self.repo_url),
             "branch": self.branch,
             "file_path": self.file_path,
@@ -234,7 +234,7 @@ class GitStorageBackend(StorageBackend):
 
     @staticmethod
     def _mask_token(url: str) -> str:
-        """隐藏 URL 中的 token"""
+        """Mask the token in the URL."""
         if "@" in url and "://" in url:
             protocol, rest = url.split("://", 1)
             if "@" in rest:

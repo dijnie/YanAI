@@ -8,7 +8,7 @@ from services.storage.base import StorageBackend
 
 
 class JSONStorageBackend(StorageBackend):
-    """本地 JSON 文件存储后端"""
+    """Local JSON file storage backend."""
 
     def __init__(self, file_path: Path, auth_keys_path: Path | None = None):
         self.file_path = file_path
@@ -41,15 +41,15 @@ class JSONStorageBackend(StorageBackend):
         )
 
     def load_accounts(self) -> list[dict[str, Any]]:
-        """从 JSON 文件加载账号数据"""
+        """Load account data from the JSON file."""
         return self._load_json_list(self.file_path)
 
     def save_accounts(self, accounts: list[dict[str, Any]]) -> None:
-        """保存账号数据到 JSON 文件"""
+        """Save account data to the JSON file."""
         self._save_json_list(self.file_path, accounts)
 
     def load_auth_keys(self) -> list[dict[str, Any]]:
-        """从 JSON 文件加载鉴权密钥数据"""
+        """Load auth key data from the JSON file."""
         if not self.auth_keys_path.exists():
             return []
         try:
@@ -61,7 +61,7 @@ class JSONStorageBackend(StorageBackend):
         return data if isinstance(data, list) else []
 
     def save_auth_keys(self, auth_keys: list[dict[str, Any]]) -> None:
-        """保存鉴权密钥数据到 JSON 文件"""
+        """Save auth key data to the JSON file."""
         self.auth_keys_path.parent.mkdir(parents=True, exist_ok=True)
         self.auth_keys_path.write_text(
             json.dumps({"items": auth_keys}, ensure_ascii=False, indent=2) + "\n",
@@ -105,9 +105,9 @@ class JSONStorageBackend(StorageBackend):
         self._save_json_list(self.image_records_path, image_records)
 
     def health_check(self) -> dict[str, Any]:
-        """健康检查"""
+        """Health check."""
         try:
-            # 检查文件是否可读写
+            # Check that the file is readable and writable
             if self.file_path.exists():
                 self.file_path.read_text(encoding="utf-8")
             return {
@@ -132,10 +132,10 @@ class JSONStorageBackend(StorageBackend):
             }
 
     def get_backend_info(self) -> dict[str, Any]:
-        """获取存储后端信息"""
+        """Get storage backend information."""
         return {
             "type": "json",
-            "description": "本地 JSON 文件存储",
+            "description": "Local JSON file storage",
             "file_path": str(self.file_path),
             "file_exists": self.file_path.exists(),
             "auth_keys_file_path": str(self.auth_keys_path),

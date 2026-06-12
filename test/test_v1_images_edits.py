@@ -37,13 +37,13 @@ def summarize_chunk(chunk: dict[str, object]) -> dict[str, object]:
 
 class ImageEditsTests(unittest.TestCase):
     def test_image_edit_http(self):
-        """测试图片编辑的非流式 HTTP 调用。"""
+        """TestImage editing non-streaming HTTP call."""
         response = requests.post(
             f"{BASE_URL}/v1/images/edits",
             headers={"Authorization": f"Bearer {AUTH_KEY}"},
             data={
                 "model": "gpt-image-2",
-                "prompt": "参考输入图片，保持人物主体和二次元插画风格不变，让女孩怀里抱着一只可爱的小猫，画面自然协调。",
+                "prompt": "Use the input image as reference, keep the main character and anime illustration style unchanged, and make the girl hold a cute kitten naturally.",
                 "n": "1",
                 "response_format": "b64_json",
             },
@@ -57,7 +57,7 @@ class ImageEditsTests(unittest.TestCase):
             b64_json = str((item or {}).get("b64_json") or "")
             if b64_json:
                 saved_paths.append(save_image(b64_json, f"images_edits_non_stream_{index}"))
-        self.assertGreater(len(saved_paths), 0, "非流式接口未输出图片。")
+        self.assertGreater(len(saved_paths), 0, "The non-streaming endpoint did not output images.")
         logger.info({
             "event": "test_images_edits_non_stream_done",
             "status_code": response.status_code,
@@ -67,13 +67,13 @@ class ImageEditsTests(unittest.TestCase):
         })
 
     def test_image_edit_stream_http(self):
-        """测试图片编辑的流式 HTTP 调用。"""
+        """TestImage editing streaming HTTP call."""
         response = requests.post(
             f"{BASE_URL}/v1/images/edits",
             headers={"Authorization": f"Bearer {AUTH_KEY}"},
             data={
                 "model": "gpt-image-2",
-                "prompt": "请提取两张输入界面截图中的 6 个任务，并把这 6 个任务整合排版到同一张图里，做成一张清晰的中文任务总览海报，标题明确，六个任务分区展示，版面整洁。",
+                "prompt": "Extract the six tasks from the two input UI screenshots and combine them into one clear task overview poster with a clear title, six sections, and a clean layout.",
                 "n": "1",
                 "response_format": "b64_json",
                 "stream": "true",
@@ -131,8 +131,8 @@ class ImageEditsTests(unittest.TestCase):
             b64_json = str(item.get("b64_json") or "")
             if b64_json:
                 saved_paths.append(save_image(b64_json, f"images_edits_stream_{index}"))
-        self.assertFalse(stream_errors, f"流式接口返回错误: {stream_errors}")
-        self.assertGreater(len(saved_paths), 0, "流式接口未输出图片。")
+        self.assertFalse(stream_errors, f"Streaming endpoint returned errors: {stream_errors}")
+        self.assertGreater(len(saved_paths), 0, "The streaming endpoint did not output images.")
         logger.info({
             "event": "test_images_edits_stream_done",
             "saved_paths": [str(path) for path in saved_paths],

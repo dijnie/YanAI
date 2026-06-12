@@ -22,40 +22,40 @@ DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="备份、校验和恢复 YanAI 旧 JSON 存储数据",
+        description="Back up, verify, and restore YanAI legacy JSON storage data",
     )
     parser.add_argument(
         "--data-dir",
         default=str(DATA_DIR),
-        help="JSON 数据目录，默认 ./data",
+        help="JSON data directory, defaults to ./data",
     )
     parser.add_argument(
         "--backup-dir",
-        help="创建备份时写入的目录；默认 data/backups/storage-json-<timestamp>",
+        help="Directory to write the backup to; defaults to data/backups/storage-json-<timestamp>",
     )
     parser.add_argument(
         "--verify",
         metavar="BACKUP_DIR",
-        help="只校验指定备份目录是否完整可恢复",
+        help="Only verify that the given backup directory is complete and restorable",
     )
     parser.add_argument(
         "--restore",
         metavar="BACKUP_DIR",
-        help="从指定备份目录恢复 JSON 数据文件",
+        help="Restore JSON data files from the given backup directory",
     )
     parser.add_argument(
         "--target-dir",
-        help="恢复目标目录，默认 ./data",
+        help="Restore target directory, defaults to ./data",
     )
     parser.add_argument(
         "--force",
         action="store_true",
-        help="恢复时允许覆盖目标目录中的同名文件",
+        help="Allow overwriting files with the same name in the target directory during restore",
     )
     parser.add_argument(
         "--json",
         action="store_true",
-        help="输出机器可读 JSON",
+        help="Output machine-readable JSON",
     )
     args = parser.parse_args()
 

@@ -57,7 +57,7 @@ import { cn } from "@/lib/utils";
 import { AccountImportDialog } from "./components/account-import-dialog";
 
 const accountTypeOptions: { label: string; value: AccountType | "all" }[] = [
-  { label: "全部类型", value: "all" },
+  { label: "All Types", value: "all" },
   { label: "Free", value: "Free" },
   { label: "Plus", value: "Plus" },
   { label: "ProLite", value: "ProLite" },
@@ -66,11 +66,11 @@ const accountTypeOptions: { label: string; value: AccountType | "all" }[] = [
 ];
 
 const accountStatusOptions: { label: string; value: AccountStatus | "all" }[] = [
-  { label: "全部状态", value: "all" },
-  { label: "正常", value: "正常" },
-  { label: "限流", value: "限流" },
-  { label: "异常", value: "异常" },
-  { label: "禁用", value: "禁用" },
+  { label: "All Statuses", value: "all" },
+  { label: "Normal", value: "Normal" },
+  { label: "Rate Limited", value: "Rate Limited" },
+  { label: "Error", value: "Error" },
+  { label: "Disabled", value: "Disabled" },
 ];
 
 const statusMeta: Record<
@@ -80,19 +80,19 @@ const statusMeta: Record<
     badge: ComponentProps<typeof Badge>["variant"];
   }
 > = {
-  正常: { icon: CheckCircle2, badge: "success" },
-  限流: { icon: CircleAlert, badge: "warning" },
-  异常: { icon: CircleOff, badge: "danger" },
-  禁用: { icon: Ban, badge: "secondary" },
+  Normal: { icon: CheckCircle2, badge: "success" },
+  "Rate Limited": { icon: CircleAlert, badge: "warning" },
+  Error: { icon: CircleOff, badge: "danger" },
+  Disabled: { icon: Ban, badge: "secondary" },
 };
 
 const metricCards = [
-  { key: "total", label: "账户总数", color: "text-stone-900", icon: UserRound },
-  { key: "active", label: "正常账户", color: "text-emerald-600", icon: CheckCircle2 },
-  { key: "limited", label: "限流账户", color: "text-orange-500", icon: CircleAlert },
-  { key: "abnormal", label: "异常账户", color: "text-rose-500", icon: CircleOff },
-  { key: "disabled", label: "禁用账户", color: "text-stone-500", icon: Ban },
-  { key: "quota", label: "剩余额度", color: "text-fuchsia-500", icon: RefreshCw },
+  { key: "total", label: "Total Accounts", color: "text-stone-900", icon: UserRound },
+  { key: "active", label: "Normal Accounts", color: "text-emerald-600", icon: CheckCircle2 },
+  { key: "limited", label: "Rate Limited Accounts", color: "text-orange-500", icon: CircleAlert },
+  { key: "abnormal", label: "Error Accounts", color: "text-rose-500", icon: CircleOff },
+  { key: "disabled", label: "Disabled Accounts", color: "text-stone-500", icon: Ban },
+  { key: "quota", label: "Remaining Quota", color: "text-fuchsia-500", icon: RefreshCw },
 ] as const;
 
 function isUnlimitedImageQuotaAccount(account: Account) {
@@ -111,7 +111,7 @@ function formatQuota(account: Account) {
     return "∞";
   }
   if (account.imageQuotaUnknown) {
-    return "未知";
+    return "Unknown";
   }
   return String(Math.max(0, account.quota));
 }
@@ -130,7 +130,7 @@ function formatRestoreAt(value?: string | null) {
   const totalHours = Math.ceil(diffMs / (1000 * 60 * 60));
   const days = Math.floor(totalHours / 24);
   const hours = totalHours % 24;
-  const relative = diffMs > 0 ? `剩余 ${days}d ${hours}h` : "已到恢复时间";
+  const relative = diffMs > 0 ? `${days}d ${hours}h left` : "Recovery time reached";
 
   const pad = (num: number) => String(num).padStart(2, "0");
   const absolute = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(
@@ -141,12 +141,12 @@ function formatRestoreAt(value?: string | null) {
 }
 
 function formatQuotaSummary(accounts: Account[]) {
-  const availableAccounts = accounts.filter((account) => account.status === "正常");
+  const availableAccounts = accounts.filter((account) => account.status === "Normal");
   if (availableAccounts.some(isUnlimitedImageQuotaAccount)) {
     return "∞";
   }
   if (availableAccounts.some((account) => account.imageQuotaUnknown)) {
-    return "未知";
+    return "Unknown";
   }
   return formatCompact(availableAccounts.reduce((sum, account) => sum + Math.max(0, account.quota), 0));
 }
@@ -158,7 +158,7 @@ function maskToken(token?: string) {
 }
 
 function credentialStateLabel(present?: boolean) {
-  return present ? "已保存" : "未保存";
+  return present ? "Saved" : "Not Saved";
 }
 
 function credentialStateVariant(present?: boolean): ComponentProps<typeof Badge>["variant"] {
@@ -216,7 +216,7 @@ function AccountsPageContent() {
   const [pageSize, setPageSize] = useState("10");
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   const [editType, setEditType] = useState<AccountType>("Free");
-  const [editStatus, setEditStatus] = useState<AccountStatus>("正常");
+  const [editStatus, setEditStatus] = useState<AccountStatus>("Normal");
   const [editQuota, setEditQuota] = useState("0");
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -235,7 +235,7 @@ function AccountsPageContent() {
       setAccounts(normalizeAccounts(data.items));
       setSelectedIds((prev) => prev.filter((id) => data.items.some((item) => item.id === id)));
     } catch (error) {
-      const message = error instanceof Error ? error.message : "加载账户失败";
+      const message = error instanceof Error ? error.message : "Failed to load accounts";
       toast.error(message);
     } finally {
       if (!silent) {
@@ -272,10 +272,10 @@ function AccountsPageContent() {
 
   const summary = useMemo(() => {
     const total = accounts.length;
-    const active = accounts.filter((item) => item.status === "正常").length;
-    const limited = accounts.filter((item) => item.status === "限流").length;
-    const abnormal = accounts.filter((item) => item.status === "异常").length;
-    const disabled = accounts.filter((item) => item.status === "禁用").length;
+    const active = accounts.filter((item) => item.status === "Normal").length;
+    const limited = accounts.filter((item) => item.status === "Rate Limited").length;
+    const abnormal = accounts.filter((item) => item.status === "Error").length;
+    const disabled = accounts.filter((item) => item.status === "Disabled").length;
     const quota = formatQuotaSummary(accounts);
 
     return { total, active, limited, abnormal, disabled, quota };
@@ -287,7 +287,7 @@ function AccountsPageContent() {
   }, [accounts, selectedIds]);
 
   const abnormalTokens = useMemo(() => {
-    return accounts.filter((item) => item.status === "异常").map((item) => item.access_token);
+    return accounts.filter((item) => item.status === "Error").map((item) => item.access_token);
   }, [accounts]);
 
   const paginationItems = useMemo(() => {
@@ -306,7 +306,7 @@ function AccountsPageContent() {
 
   const handleDeleteTokens = async (tokens: string[]) => {
     if (tokens.length === 0) {
-      toast.error("请先选择要删除的账户");
+      toast.error("Select the accounts to delete first");
       return;
     }
 
@@ -315,9 +315,9 @@ function AccountsPageContent() {
       const data = await deleteAccounts(tokens);
       setAccounts(normalizeAccounts(data.items));
       setSelectedIds((prev) => prev.filter((id) => data.items.some((item) => item.id === id)));
-      toast.success(`删除 ${data.removed ?? 0} 个账户`);
+      toast.success(`Deleted ${data.removed ?? 0} accounts`);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "删除账户失败";
+      const message = error instanceof Error ? error.message : "Failed to delete accounts";
       toast.error(message);
     } finally {
       setIsDeleting(false);
@@ -326,7 +326,7 @@ function AccountsPageContent() {
 
   const handleRefreshAccounts = async (accessTokens: string[]) => {
     if (accessTokens.length === 0) {
-      toast.error("没有需要刷新的账户");
+      toast.error("No accounts to refresh");
       return;
     }
 
@@ -338,13 +338,13 @@ function AccountsPageContent() {
       if (data.errors.length > 0) {
         const firstError = data.errors[0]?.error;
         toast.error(
-          `刷新成功 ${data.refreshed} 个，失败 ${data.errors.length} 个${firstError ? `，首个错误：${firstError}` : ""}`,
+          `Refreshed ${data.refreshed}, failed ${data.errors.length}${firstError ? `, first error: ${firstError}` : ""}`,
         );
       } else {
-        toast.success(`刷新成功 ${data.refreshed} 个账户`);
+        toast.success(`Refreshed ${data.refreshed} accounts`);
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : "刷新账户失败";
+      const message = error instanceof Error ? error.message : "Failed to refresh accounts";
       toast.error(message);
     } finally {
       setIsRefreshing(false);
@@ -354,21 +354,21 @@ function AccountsPageContent() {
   const handleCopyVisibleValue = async (label: string, value?: string | null) => {
     const text = String(value || "").trim();
     if (!text) {
-      toast.error(`${label} 没有可复制内容`);
+      toast.error(`${label} has nothing to copy`);
       return;
     }
 
     try {
       await navigator.clipboard.writeText(text);
-      toast.success(`${label} 已复制`);
+      toast.success(`${label} copied`);
     } catch {
-      toast.error("复制失败，请检查浏览器剪贴板权限");
+      toast.error("Copy failed, check browser clipboard permissions");
     }
   };
 
   const handleExportSelectedAccounts = async () => {
     if (selectedTokens.length === 0) {
-      toast.error("请先选择要导出的账户");
+      toast.error("Select the accounts to export first");
       return;
     }
 
@@ -380,9 +380,9 @@ function AccountsPageContent() {
         count: data.count,
         items: data.items,
       });
-      toast.success(`已导出 ${data.count} 个账号信息`);
+      toast.success(`Exported ${data.count} accounts`);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "导出账号信息失败";
+      const message = error instanceof Error ? error.message : "Failed to export account info";
       toast.error(message);
     } finally {
       setIsExportingSelected(false);
@@ -399,13 +399,13 @@ function AccountsPageContent() {
       const data = await exportAccounts([editingAccount.access_token]);
       const item = data.items[0];
       if (!item) {
-        toast.error("未找到账号完整信息");
+        toast.error("Full account info not found");
         return;
       }
       await navigator.clipboard.writeText(`${JSON.stringify(item, null, 2)}\n`);
-      toast.success("完整账号 JSON 已复制");
+      toast.success("Full account JSON copied");
     } catch (error) {
-      const message = error instanceof Error ? error.message : "复制完整账号 JSON 失败";
+      const message = error instanceof Error ? error.message : "Failed to copy full account JSON";
       toast.error(message);
     } finally {
       setIsCopyingAccountJson(false);
@@ -423,13 +423,13 @@ function AccountsPageContent() {
       const rawValue = data.items[0]?.[field];
       const text = typeof rawValue === "string" ? rawValue.trim() : rawValue == null ? "" : JSON.stringify(rawValue);
       if (!text) {
-        toast.error(`${label} 未保存`);
+        toast.error(`${label} is not saved`);
         return;
       }
       await navigator.clipboard.writeText(text);
-      toast.success(`${label} 已复制`);
+      toast.success(`${label} copied`);
     } catch (error) {
-      const message = error instanceof Error ? error.message : `${label} 复制失败`;
+      const message = error instanceof Error ? error.message : `Failed to copy ${label}`;
       toast.error(message);
     } finally {
       setCopyingExportField(null);
@@ -458,9 +458,9 @@ function AccountsPageContent() {
       setAccounts(normalizeAccounts(data.items));
       setSelectedIds((prev) => prev.filter((id) => data.items.some((item) => item.id === id)));
       setEditingAccount(null);
-      toast.success("账号信息已更新");
+      toast.success("Account updated");
     } catch (error) {
-      const message = error instanceof Error ? error.message : "更新账号失败";
+      const message = error instanceof Error ? error.message : "Failed to update account";
       toast.error(message);
     } finally {
       setIsUpdating(false);
@@ -479,8 +479,8 @@ function AccountsPageContent() {
     <button
       type="button"
       className="rounded-md p-1 text-stone-400 transition hover:bg-stone-100 hover:text-stone-700"
-      title={`复制 ${label}`}
-      aria-label={`复制 ${label}`}
+      title={`Copy ${label}`}
+      aria-label={`Copy ${label}`}
       onClick={() => void handleCopyVisibleValue(label, value)}
     >
       <Copy className="size-3.5" />
@@ -491,8 +491,8 @@ function AccountsPageContent() {
     <button
       type="button"
       className="rounded-md p-1 text-stone-400 transition hover:bg-stone-100 hover:text-stone-700 disabled:cursor-not-allowed disabled:opacity-40"
-      title={`复制完整 ${label}`}
-      aria-label={`复制完整 ${label}`}
+      title={`Copy full ${label}`}
+      aria-label={`Copy full ${label}`}
       disabled={!present || copyingExportField !== null || isCopyingAccountJson}
       onClick={() => void handleCopyExportedAccountValue(field, label)}
     >
@@ -507,7 +507,7 @@ function AccountsPageContent() {
           <div className="text-xs font-semibold tracking-[0.18em] text-stone-500 uppercase">
             Account Pool
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight">号池管理</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Account Pool</h1>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -518,7 +518,7 @@ function AccountsPageContent() {
             disabled={isLoading || isRefreshing || isDeleting}
           >
             <RefreshCw className={cn("size-4", isLoading ? "animate-spin" : "")} />
-            刷新
+            Refresh
           </Button>
           <Button
             variant="outline"
@@ -527,7 +527,7 @@ function AccountsPageContent() {
             disabled={isLoading || isRefreshing || isDeleting || accounts.length === 0}
           >
             <RefreshCw className={cn("size-4", isRefreshing ? "animate-spin" : "")} />
-            一键刷新所有账号信息和额度
+            Refresh All Account Info and Quota
           </Button>
           <AccountImportDialog
             disabled={isLoading || isRefreshing || isDeleting}
@@ -544,7 +544,7 @@ function AccountsPageContent() {
             disabled={accounts.length === 0}
           >
             <Download className="size-4" />
-            导出全部 Token
+            Export All Tokens
           </Button>
         </div>
       </section>
@@ -552,21 +552,21 @@ function AccountsPageContent() {
       <Dialog open={Boolean(editingAccount)} onOpenChange={(open) => (!open ? setEditingAccount(null) : null)}>
         <DialogContent showCloseButton={false} className="max-h-[90vh] overflow-y-auto rounded-2xl p-6">
           <DialogHeader className="gap-2">
-            <DialogTitle>编辑账户</DialogTitle>
+            <DialogTitle>Edit Account</DialogTitle>
             <DialogDescription className="text-sm leading-6">
-              手动修改账号状态、类型和额度。
+              Manually change the account status, type, and quota.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="rounded-xl border border-stone-200 bg-stone-50/80 p-4">
               <div className="mb-3 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
                 <div>
-                  <div className="text-sm font-medium text-stone-700">OAuth 凭据</div>
-                  <div className="mt-1 text-xs text-stone-500">显示保存状态和脱敏摘要，完整值仍只保存在后端。</div>
+                  <div className="text-sm font-medium text-stone-700">OAuth Credentials</div>
+                  <div className="mt-1 text-xs text-stone-500">Shows save state and masked previews; full values stay on the backend.</div>
                 </div>
                 <div className="flex shrink-0 flex-wrap items-center gap-2">
                   <Badge variant="outline" className="rounded-md bg-white text-stone-600">
-                    {editingAccount?.oauthCredentials?.expiresAt ? "有过期时间" : "无过期时间"}
+                    {editingAccount?.oauthCredentials?.expiresAt ? "Has expiry" : "No expiry"}
                   </Badge>
                   <Button
                     variant="outline"
@@ -575,7 +575,7 @@ function AccountsPageContent() {
                     disabled={isCopyingAccountJson || copyingExportField !== null}
                   >
                     {isCopyingAccountJson ? <LoaderCircle className="size-3.5 animate-spin" /> : <Copy className="size-3.5" />}
-                    复制完整 JSON
+                    Copy Full JSON
                   </Button>
                 </div>
               </div>
@@ -601,7 +601,7 @@ function AccountsPageContent() {
                         {credential?.present ? credential.preview : "—"}
                       </div>
                       <div className="mt-1 text-xs text-stone-400">
-                        {credential?.present ? `${credential.length} 字符` : "无"}
+                        {credential?.present ? `${credential.length} chars` : "None"}
                       </div>
                     </div>
                   );
@@ -668,7 +668,7 @@ function AccountsPageContent() {
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-stone-700">状态</label>
+              <label className="text-sm font-medium text-stone-700">Status</label>
               <Select value={editStatus} onValueChange={(value) => setEditStatus(value as AccountStatus)}>
                 <SelectTrigger className="h-11 rounded-xl border-stone-200 bg-white">
                   <SelectValue />
@@ -685,7 +685,7 @@ function AccountsPageContent() {
               </Select>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-stone-700">类型</label>
+              <label className="text-sm font-medium text-stone-700">Type</label>
               <Select value={editType} onValueChange={(value) => setEditType(value as AccountType)}>
                 <SelectTrigger className="h-11 rounded-xl border-stone-200 bg-white">
                   <SelectValue />
@@ -702,7 +702,7 @@ function AccountsPageContent() {
               </Select>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-stone-700">额度</label>
+              <label className="text-sm font-medium text-stone-700">Quota</label>
               <Input
                 value={editQuota}
                 onChange={(event) => setEditQuota(event.target.value)}
@@ -717,7 +717,7 @@ function AccountsPageContent() {
               onClick={() => setEditingAccount(null)}
               disabled={isUpdating}
             >
-              取消
+              Cancel
             </Button>
             <Button
               className="h-10 rounded-xl bg-stone-950 px-5 text-white hover:bg-stone-800"
@@ -725,7 +725,7 @@ function AccountsPageContent() {
               disabled={isUpdating}
             >
               {isUpdating ? <LoaderCircle className="size-4 animate-spin" /> : null}
-              保存修改
+              Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -758,7 +758,7 @@ function AccountsPageContent() {
       <section className="space-y-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-3">
-            <h2 className="text-lg font-semibold tracking-tight">账户列表</h2>
+            <h2 className="text-lg font-semibold tracking-tight">Account List</h2>
             <Badge variant="secondary" className="rounded-lg bg-stone-200 px-2 py-0.5 text-stone-700">
               {filteredAccounts.length}
             </Badge>
@@ -773,7 +773,7 @@ function AccountsPageContent() {
                   setQuery(event.target.value);
                   setPage(1);
                 }}
-                placeholder="搜索邮箱"
+                placeholder="Search email"
                 className="h-10 rounded-xl border-stone-200 bg-white/85 pl-10"
               />
             </div>
@@ -823,8 +823,8 @@ function AccountsPageContent() {
                 <LoaderCircle className="size-5 animate-spin" />
               </div>
               <div className="space-y-1">
-                <p className="text-sm font-medium text-stone-700">正在加载账户</p>
-                <p className="text-sm text-stone-500">从后端同步账号列表和状态。</p>
+                <p className="text-sm font-medium text-stone-700">Loading accounts</p>
+                <p className="text-sm text-stone-500">Syncing account list and status from the backend.</p>
               </div>
             </CardContent>
           </Card>
@@ -846,7 +846,7 @@ function AccountsPageContent() {
                   disabled={selectedTokens.length === 0 || isRefreshing}
                 >
                   {isRefreshing ? <LoaderCircle className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
-                  刷新选中账号信息和额度
+                  Refresh Selected Account Info and Quota
                 </Button>
                 <Button
                   variant="ghost"
@@ -855,7 +855,7 @@ function AccountsPageContent() {
                   disabled={selectedTokens.length === 0 || isExportingSelected}
                 >
                   {isExportingSelected ? <LoaderCircle className="size-4 animate-spin" /> : <Download className="size-4" />}
-                  导出所选信息
+                  Export Selected
                 </Button>
                 <Button
                   variant="ghost"
@@ -864,7 +864,7 @@ function AccountsPageContent() {
                   disabled={abnormalTokens.length === 0 || isDeleting}
                 >
                   {isDeleting ? <LoaderCircle className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
-                  移除异常账号
+                  Remove Error Accounts
                 </Button>
                 <Button
                   variant="ghost"
@@ -873,11 +873,11 @@ function AccountsPageContent() {
                   disabled={selectedTokens.length === 0 || isDeleting}
                 >
                   {isDeleting ? <LoaderCircle className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
-                  删除所选
+                  Delete Selected
                 </Button>
                 {selectedIds.length > 0 ? (
                   <span className="rounded-lg bg-stone-100 px-2.5 py-1 text-xs font-medium text-stone-600">
-                    已选择 {selectedIds.length} 项
+                    {selectedIds.length} selected
                   </span>
                 ) : null}
               </div>
@@ -894,14 +894,14 @@ function AccountsPageContent() {
                       />
                     </th>
                     <th className="w-56 px-4 py-3">token</th>
-                    <th className="w-28 px-4 py-3">类型</th>
-                    <th className="w-24 px-4 py-3">状态</th>
-                    <th className="w-56 px-4 py-3">账号信息</th>
-                    <th className="w-24 px-4 py-3">额度</th>
-                    <th className="w-40 px-4 py-3">恢复时间</th>
-                    <th className="w-18 px-4 py-3">成功</th>
-                    <th className="w-18 px-4 py-3">失败</th>
-                    <th className="w-24 px-4 py-3">操作</th>
+                    <th className="w-28 px-4 py-3">Type</th>
+                    <th className="w-24 px-4 py-3">Status</th>
+                    <th className="w-56 px-4 py-3">Account Info</th>
+                    <th className="w-24 px-4 py-3">Quota</th>
+                    <th className="w-40 px-4 py-3">Recovery Time</th>
+                    <th className="w-18 px-4 py-3">Success</th>
+                    <th className="w-18 px-4 py-3">Failed</th>
+                    <th className="w-24 px-4 py-3">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -936,7 +936,7 @@ function AccountsPageContent() {
                               className="rounded-lg p-1 text-stone-400 transition hover:bg-stone-100 hover:text-stone-700"
                               onClick={() => {
                                 void navigator.clipboard.writeText(account.access_token);
-                                toast.success("token 已复制");
+                                toast.success("Token copied");
                               }}
                             >
                               <Copy className="size-4" />
@@ -1018,8 +1018,8 @@ function AccountsPageContent() {
                     <Search className="size-5" />
                   </div>
                   <div className="space-y-1">
-                    <p className="text-sm font-medium text-stone-700">没有匹配的账户</p>
-                    <p className="text-sm text-stone-500">调整筛选条件或搜索关键字后重试。</p>
+                    <p className="text-sm font-medium text-stone-700">No matching accounts</p>
+                    <p className="text-sm text-stone-500">Adjust the filters or search keywords and try again.</p>
                   </div>
                 </div>
               ) : null}
@@ -1028,13 +1028,13 @@ function AccountsPageContent() {
             <div className="border-t border-stone-100 px-4 py-4">
               <div className="flex items-center justify-center gap-3 overflow-x-auto whitespace-nowrap">
                 <div className="shrink-0 text-sm text-stone-500">
-                显示第 {filteredAccounts.length === 0 ? 0 : startIndex + 1} -{" "}
-                {Math.min(startIndex + Number(pageSize), filteredAccounts.length)} 条，共{" "}
-                {filteredAccounts.length} 条
+                Showing {filteredAccounts.length === 0 ? 0 : startIndex + 1} -{" "}
+                {Math.min(startIndex + Number(pageSize), filteredAccounts.length)} of{" "}
+                {filteredAccounts.length}
                 </div>
 
                 <span className="shrink-0 text-sm leading-none text-stone-500">
-                  {safePage} / {pageCount} 页
+                  Page {safePage} / {pageCount}
                 </span>
                 <Select
                   value={pageSize}
@@ -1047,10 +1047,10 @@ function AccountsPageContent() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="10">10 / 页</SelectItem>
-                    <SelectItem value="20">20 / 页</SelectItem>
-                    <SelectItem value="50">50 / 页</SelectItem>
-                    <SelectItem value="100">100 / 页</SelectItem>
+                    <SelectItem value="10">10 / page</SelectItem>
+                    <SelectItem value="20">20 / page</SelectItem>
+                    <SelectItem value="50">50 / page</SelectItem>
+                    <SelectItem value="100">100 / page</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button

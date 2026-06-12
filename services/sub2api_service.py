@@ -554,8 +554,9 @@ def _is_duplicate_message(message: str) -> bool:
         "duplicate" in text
         or "unique" in text
         or ("already" in text and "exist" in text)
-        or "已存在" in message
-        or "重复" in message
+        # Remote sub2api servers may respond in Chinese: "\u5df2\u5b58\u5728" (already exists), "\u91cd\u590d" (duplicate).
+        or "\u5df2\u5b58\u5728" in message
+        or "\u91cd\u590d" in message
     )
 
 

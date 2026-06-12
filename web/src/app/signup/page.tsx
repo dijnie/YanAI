@@ -41,9 +41,9 @@ export default function SignupPage() {
     setIsSendingCode(true);
     try {
       const data = await sendRegisterVerificationCode(email.trim());
-      toast.success(data.required ? "验证码已发送，请检查邮箱" : "当前未启用邮箱验证");
+      toast.success(data.required ? "Verification code sent, please check your inbox" : "Email verification is currently disabled");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "发送验证码失败");
+      toast.error(error instanceof Error ? error.message : "Failed to send verification code");
     } finally {
       setIsSendingCode(false);
     }
@@ -68,7 +68,7 @@ export default function SignupPage() {
       });
       router.replace("/image");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "注册失败");
+      toast.error(error instanceof Error ? error.message : "Sign up failed");
     } finally {
       setIsSubmitting(false);
     }
@@ -91,20 +91,20 @@ export default function SignupPage() {
               <Sparkles className="size-5" />
             </div>
             <div className="space-y-2">
-              <h1 className="text-3xl font-semibold tracking-tight text-stone-950">创建颜AI账号</h1>
-              <p className="text-sm leading-6 text-stone-500">注册后可通过兑换码获得画图额度。</p>
+              <h1 className="text-3xl font-semibold tracking-tight text-stone-950">Create a YanAI Account</h1>
+              <p className="text-sm leading-6 text-stone-500">After signing up, redeem codes to get image generation quota.</p>
             </div>
           </div>
 
           <div className="space-y-4">
-            <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="昵称" className="h-12 rounded-lg border-rose-100 bg-white px-4" />
-            <Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="邮箱" className="h-12 rounded-lg border-rose-100 bg-white px-4" />
+            <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Nickname" className="h-12 rounded-lg border-rose-100 bg-white px-4" />
+            <Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Email" className="h-12 rounded-lg border-rose-100 bg-white px-4" />
             {registerOptions?.email_verification_enabled ? (
               <div className="flex gap-2">
                 <Input
                   value={verificationCode}
                   onChange={(event) => setVerificationCode(event.target.value)}
-                  placeholder="邮箱验证码"
+                  placeholder="Email verification code"
                   className="h-12 min-w-0 flex-1 rounded-lg border-rose-100 bg-white px-4"
                 />
                 <Button
@@ -115,7 +115,7 @@ export default function SignupPage() {
                   disabled={isSendingCode}
                 >
                   {isSendingCode ? <LoaderCircle className="size-4 animate-spin" /> : null}
-                  发送验证码
+                  Send Code
                 </Button>
               </div>
             ) : null}
@@ -126,7 +126,7 @@ export default function SignupPage() {
               onKeyDown={(event) => {
                 if (event.key === "Enter") void handleSignup();
               }}
-              placeholder="密码，至少 6 位"
+              placeholder="Password, at least 6 characters"
               className="h-12 rounded-lg border-rose-100 bg-white px-4"
             />
           </div>
@@ -137,7 +137,7 @@ export default function SignupPage() {
             disabled={isSubmitting}
           >
             {isSubmitting ? <LoaderCircle className="size-4 animate-spin" /> : null}
-            注册并登录
+            Sign Up & Log In
           </Button>
 
           {registerOptions?.linuxdo_oauth_enabled ? (
@@ -147,14 +147,14 @@ export default function SignupPage() {
               className="h-12 w-full rounded-lg border-rose-100 bg-white text-stone-800 hover:bg-rose-50"
               onClick={startLinuxDoOAuth}
             >
-              使用 Linux DO 注册 / 登录
+              Sign up / Log in with Linux DO
             </Button>
           ) : null}
 
           <div className="text-center text-sm text-stone-500">
-            已有账号？
+            Already have an account?
             <Link href="/login" className="ml-1 font-medium text-rose-600 hover:text-rose-700">
-              去登录
+              Log in
             </Link>
           </div>
         </CardContent>

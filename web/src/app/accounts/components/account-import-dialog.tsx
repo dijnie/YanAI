@@ -62,18 +62,18 @@ function getCpaAccessToken(value: unknown) {
 }
 
 function formatImportSummary(added?: number, skipped?: number) {
-  const parts = [`新增 ${added ?? 0} 个`];
+  const parts = [`${added ?? 0} added`];
   if ((skipped ?? 0) > 0) {
-    parts.push(`重复 ${skipped ?? 0} 个`);
+    parts.push(`${skipped ?? 0} duplicates`);
   }
-  return parts.join("，");
+  return parts.join(", ");
 }
 
 function readFileAsText(file: File) {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "");
-    reader.onerror = () => reject(reader.error ?? new Error(`读取文件失败: ${file.name}`));
+    reader.onerror = () => reject(reader.error ?? new Error(`Failed to read file: ${file.name}`));
     reader.readAsText(file);
   });
 }
@@ -142,7 +142,7 @@ export function AccountImportDialog({ disabled, onImported }: AccountImportDialo
     const normalizedTokens = tokens.map((item) => item.trim()).filter(Boolean);
 
     if (normalizedTokens.length === 0) {
-      toast.error("请先提供至少一个可用 Token");
+      toast.error("Provide at least one valid token first");
       return;
     }
 
@@ -156,15 +156,15 @@ export function AccountImportDialog({ disabled, onImported }: AccountImportDialo
       if ((data.errors?.length ?? 0) > 0) {
         const firstError = data.errors?.[0]?.error;
         toast.error(
-          `${successText ?? "导入完成"}：${formatImportSummary(data.added, data.skipped)}，已刷新 ${data.refreshed ?? 0} 个，账号信息刷新失败 ${data.errors?.length ?? 0} 个${firstError ? `，首个错误：${firstError}` : ""}`,
+          `${successText ?? "Import finished"}: ${formatImportSummary(data.added, data.skipped)}, refreshed ${data.refreshed ?? 0}, failed to refresh ${data.errors?.length ?? 0}${firstError ? `, first error: ${firstError}` : ""}`,
         );
       } else {
         toast.success(
-          `${successText ?? "导入完成"}，新增 ${data.added ?? 0} 个，跳过 ${data.skipped ?? 0} 个重复项，已自动刷新账号信息`,
+          `${successText ?? "Import finished"}, added ${data.added ?? 0}, skipped ${data.skipped ?? 0} duplicates, account info refreshed automatically`,
         );
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : "导入账户失败";
+      const message = error instanceof Error ? error.message : "Failed to import accounts";
       toast.error(message);
     } finally {
       setIsSubmitting(false);
@@ -172,7 +172,7 @@ export function AccountImportDialog({ disabled, onImported }: AccountImportDialo
   };
 
   const handleImportTokenText = async () => {
-    await submitTokens(splitTokens(tokenInput), "Access Token 导入完成");
+    await submitTokens(splitTokens(tokenInput), "Access token import finished");
   };
 
   const handleTxtSelected = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -188,7 +188,7 @@ export function AccountImportDialog({ disabled, onImported }: AccountImportDialo
       const tokens = splitTokens(content);
 
       if (tokens.length === 0) {
-        toast.error("TXT 文件里没有读取到有效 Token");
+        toast.error("No valid tokens found in the TXT file");
         return;
       }
 
@@ -196,16 +196,16 @@ export function AccountImportDialog({ disabled, onImported }: AccountImportDialo
         const next = [...splitTokens(prev), ...tokens];
         return next.join("\n");
       });
-      toast.success(`已从 ${file.name} 读取 ${tokens.length} 个 Token`);
+      toast.success(`Read ${tokens.length} tokens from ${file.name}`);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "读取 TXT 文件失败";
+      const message = error instanceof Error ? error.message : "Failed to read TXT file";
       toast.error(message);
     }
   };
 
   const handleImportSessionJson = async () => {
     if (!sessionInput.trim()) {
-      toast.error("请先粘贴完整 Session JSON");
+      toast.error("Paste the full session JSON first");
       return;
     }
 
@@ -214,13 +214,13 @@ export function AccountImportDialog({ disabled, onImported }: AccountImportDialo
       const token = getSessionAccessToken(payload);
 
       if (!token) {
-        toast.error("未从 Session JSON 中提取到 accessToken");
+        toast.error("No accessToken found in the session JSON");
         return;
       }
 
-      await submitTokens([token], "Session JSON 导入完成");
+      await submitTokens([token], "Session JSON import finished");
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Session JSON 解析失败";
+      const message = error instanceof Error ? error.message : "Failed to parse session JSON";
       toast.error(message);
     }
   };
@@ -250,7 +250,7 @@ export function AccountImportDialog({ disabled, onImported }: AccountImportDialo
       const errorCount = results.length - parsedFileCount;
 
       if (parsedFileCount === 0) {
-        toast.error("这些 CPA JSON 文件里没有读取到可用 access_token");
+        toast.error("No usable access_token found in these CPA JSON files");
         return;
       }
 
@@ -261,7 +261,7 @@ export function AccountImportDialog({ disabled, onImported }: AccountImportDialo
       });
       setConfirmOpen(true);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "读取 CPA JSON 文件失败";
+      const message = error instanceof Error ? error.message : "Failed to read CPA JSON files";
       toast.error(message);
     }
   };
@@ -279,14 +279,14 @@ export function AccountImportDialog({ disabled, onImported }: AccountImportDialo
               className="inline-flex items-center gap-1 text-sm text-stone-500 transition hover:text-stone-800"
             >
               <ArrowLeft className="size-4" />
-              返回导入方式
+              Back to import methods
             </button>
-            <span className="text-xs text-stone-400">当前识别 {tokenCount} 个 Token</span>
+            <span className="text-xs text-stone-400">{tokenCount} tokens detected</span>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-stone-700">Access Token 列表</label>
+            <label className="text-sm font-medium text-stone-700">Access Token List</label>
             <Textarea
-              placeholder="每行一个 Access Token..."
+              placeholder="One access token per line..."
               value={tokenInput}
               onChange={(event) => setTokenInput(event.target.value)}
               className="min-h-56 resize-none rounded-xl border-stone-200"
@@ -295,8 +295,8 @@ export function AccountImportDialog({ disabled, onImported }: AccountImportDialo
           <div className="rounded-lg border border-dashed border-rose-100 bg-rose-50/45 p-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="space-y-1">
-                <div className="text-sm font-medium text-stone-800">从 TXT 文件导入</div>
-                <div className="text-sm leading-6 text-stone-500">支持 `.txt`，文件内容也是一行一个 Token。</div>
+                <div className="text-sm font-medium text-stone-800">Import from TXT File</div>
+                <div className="text-sm leading-6 text-stone-500">Supports `.txt` files with one token per line.</div>
               </div>
               <Button
                 type="button"
@@ -306,7 +306,7 @@ export function AccountImportDialog({ disabled, onImported }: AccountImportDialo
                 disabled={isSubmitting}
               >
                 <FileText className="size-4" />
-                选择 TXT
+                Choose TXT
               </Button>
             </div>
           </div>
@@ -330,10 +330,10 @@ export function AccountImportDialog({ disabled, onImported }: AccountImportDialo
             className="inline-flex items-center gap-1 text-sm text-stone-500 transition hover:text-stone-800"
           >
             <ArrowLeft className="size-4" />
-            返回导入方式
+            Back to Import Methods
           </button>
           <div className="rounded-lg border border-rose-100 bg-rose-50/45 p-4 text-sm leading-6 text-stone-600">
-            打开
+            Open
             {" "}
             <a
               href={sessionUrl}
@@ -344,18 +344,18 @@ export function AccountImportDialog({ disabled, onImported }: AccountImportDialo
               {sessionUrl}
               <ExternalLink className="size-3.5" />
             </a>
-            ，复制页面返回的完整 JSON，系统会自动提取其中的 `accessToken` 导入。
+            , copy the full JSON returned by the page, and the system will automatically extract the `accessToken` to import.
           </div>
           <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
-            <div className="font-medium">风险提示</div>
+            <div className="font-medium">Risk Warning</div>
             <div>
-              不要使用自己的大号，尽量使用不常用的小号进行导入，避免出现封号风险。本项目不承担任何封号风险责任。
+              Do not use your main account. Import with a rarely used secondary account to avoid the risk of bans. This project takes no responsibility for banned accounts.
             </div>
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-stone-700">Session JSON</label>
             <Textarea
-              placeholder='粘贴完整 JSON，例如包含 "accessToken" 的对象...'
+              placeholder='Paste the full JSON, e.g. an object containing "accessToken"...'
               value={sessionInput}
               onChange={(event) => setSessionInput(event.target.value)}
               className="min-h-56 resize-none rounded-xl border-stone-200 font-mono text-xs"
@@ -374,13 +374,13 @@ export function AccountImportDialog({ disabled, onImported }: AccountImportDialo
             className="inline-flex items-center gap-1 text-sm text-stone-500 transition hover:text-stone-800"
           >
             <ArrowLeft className="size-4" />
-            返回导入方式
+            Back to Import Methods
           </button>
           <div className="rounded-lg border border-dashed border-rose-100 bg-rose-50/45 p-5">
             <div className="space-y-2">
-              <div className="text-sm font-medium text-stone-800">多选本地 CPA JSON 文件</div>
+              <div className="text-sm font-medium text-stone-800">Select Multiple Local CPA JSON Files</div>
               <div className="text-sm leading-6 text-stone-500">
-                每个文件应为一个 JSON 对象。系统会从对象中自动提取 `access_token` 或 `accessToken`，
+                Each file should be a JSON object. The system automatically extracts `access_token` or `accessToken` from each object.
               </div>
             </div>
             <Button
@@ -390,7 +390,7 @@ export function AccountImportDialog({ disabled, onImported }: AccountImportDialo
               disabled={isSubmitting}
             >
               <Files className="size-4" />
-              选择多个 JSON 文件
+              Choose Multiple JSON Files
             </Button>
           </div>
           <input
@@ -403,8 +403,8 @@ export function AccountImportDialog({ disabled, onImported }: AccountImportDialo
           />
           {pendingCpaImport ? (
             <div className="rounded-lg border border-rose-100 bg-white/80 p-4 text-sm leading-6 text-stone-600">
-              最近一次读取到 {pendingCpaImport.parsedFileCount} 个 Token
-              {pendingCpaImport.errorCount > 0 ? `，另有 ${pendingCpaImport.errorCount} 个文件未提取成功` : ""}。
+              Last read found {pendingCpaImport.parsedFileCount} tokens
+              {pendingCpaImport.errorCount > 0 ? `, with ${pendingCpaImport.errorCount} files that could not be parsed` : ""}.
             </div>
           ) : null}
         </div>
@@ -414,26 +414,26 @@ export function AccountImportDialog({ disabled, onImported }: AccountImportDialo
     return (
       <div className="space-y-3">
         <MethodCard
-          title="导入 Access Token"
-          description="支持直接粘贴，一行一个；也支持从 TXT 文件读取，一行一个。"
+          title="Import Access Token"
+          description="Paste one token per line, or read one per line from a TXT file."
           icon={KeyRound}
           onClick={() => setMethod("token")}
         />
         <MethodCard
-          title="导入 Session JSON"
-          description="从 chatgpt.com 的 session 接口复制完整 JSON，自动提取 accessToken。"
+          title="Import Session JSON"
+          description="Paste the full JSON from the chatgpt.com session endpoint to extract accessToken automatically."
           icon={FileJson}
           onClick={() => setMethod("session")}
         />
         <MethodCard
-          title="导入 CPA JSON 文件"
-          description="支持一次多选多个本地 JSON 文件，逐个读取对象里的 access_token 后导入。"
+          title="Import CPA JSON Files"
+          description="Select multiple local JSON files and import each object access_token."
           icon={Files}
           onClick={() => setMethod("cpa")}
         />
         <MethodCard
-          title="从远程 CPA 服务器导入"
-          description="前往设置页面配置远程 CPA 服务器后再执行导入。"
+          title="Import from Remote CPA Server"
+          description="Configure a remote CPA server in Settings before importing."
           icon={Files}
           onClick={() => {
             setOpen(false);
@@ -442,8 +442,8 @@ export function AccountImportDialog({ disabled, onImported }: AccountImportDialo
           }}
         />
         <MethodCard
-          title="从 Sub2API 服务器导入"
-          description="前往设置页面配置 Sub2API 服务器，再选择其中的 OpenAI 账号导入。"
+          title="Import from Sub2API Server"
+          description="Configure a Sub2API server in Settings, then select OpenAI accounts to import."
           icon={ServerCog}
           onClick={() => {
             setOpen(false);
@@ -466,27 +466,27 @@ export function AccountImportDialog({ disabled, onImported }: AccountImportDialo
           disabled={disabled}
         >
           <Upload className="size-4" />
-          导入
+          Import
         </Button>
         <DialogContent showCloseButton={false} className="rounded-2xl p-6">
           <DialogHeader className="gap-2">
             <DialogTitle>
               {method === "menu"
-                ? "导入账户"
+                ? "Import Accounts"
                 : method === "token"
-                  ? "导入 Access Token"
+                  ? "Import Access Token"
                   : method === "session"
-                    ? "导入 Session JSON"
-                    : "导入 CPA JSON"}
+                    ? "Import Session JSON"
+                    : "Import CPA JSON"}
             </DialogTitle>
             <DialogDescription className="text-sm leading-6">
               {method === "menu"
-                ? "选择一种导入方式。导入成功后会自动拉取邮箱、类型和额度。"
+                ? "Choose an import method. Email, type, and quota are fetched after import succeeds."
                 : method === "token"
-                  ? "支持手动粘贴或从 TXT 文件导入，一行一个 Token。"
+                  ? "Paste manually or import from a TXT file, one token per line."
                   : method === "session"
-                    ? "粘贴完整 Session JSON，系统会自动提取 accessToken。"
-                    : "支持一次读取多个本地 JSON 文件，并在提交前做数量确认。"}
+                    ? "Paste the full Session JSON and the system will extract accessToken automatically."
+                    : "Read multiple local JSON files and confirm the count before submitting."}
             </DialogDescription>
           </DialogHeader>
 
@@ -499,7 +499,7 @@ export function AccountImportDialog({ disabled, onImported }: AccountImportDialo
               onClick={() => setOpen(false)}
               disabled={footerDisabled}
             >
-              取消
+              Cancel
             </Button>
             {method === "token" ? (
               <Button
@@ -508,7 +508,7 @@ export function AccountImportDialog({ disabled, onImported }: AccountImportDialo
                 disabled={footerDisabled}
               >
                 {isSubmitting ? <LoaderCircle className="size-4 animate-spin" /> : null}
-                导入 Token
+                Import Tokens
               </Button>
             ) : null}
             {method === "session" ? (
@@ -518,7 +518,7 @@ export function AccountImportDialog({ disabled, onImported }: AccountImportDialo
                 disabled={footerDisabled}
               >
                 {isSubmitting ? <LoaderCircle className="size-4 animate-spin" /> : null}
-                导入 JSON
+                Import JSON
               </Button>
             ) : null}
             {method === "cpa" ? (
@@ -530,7 +530,7 @@ export function AccountImportDialog({ disabled, onImported }: AccountImportDialo
                 onClick={() => setConfirmOpen(true)}
                 disabled={footerDisabled || !pendingCpaImport}
               >
-                查看导入确认
+                Review Import
               </Button>
             ) : null}
           </DialogFooter>
@@ -540,14 +540,14 @@ export function AccountImportDialog({ disabled, onImported }: AccountImportDialo
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent className="rounded-2xl p-6">
           <DialogHeader className="gap-2">
-            <DialogTitle>确认导入 CPA Token</DialogTitle>
+            <DialogTitle>Confirm CPA Token Import</DialogTitle>
             <DialogDescription className="text-sm leading-6">
               {pendingCpaImport
-                ? `确认识别到 ${pendingCpaImport.parsedFileCount} 个 Token，是否确认导入？`
-                : "尚未读取到可导入的 Token。"}
+                ? `Detected ${pendingCpaImport.parsedFileCount} tokens. Import them now?`
+                : "No importable tokens have been read."}
               {pendingCpaImport?.errorCount
-                ? `，另有 ${pendingCpaImport.errorCount} 个文件未提取成功。`
-                : "。"}
+                ? `, with ${pendingCpaImport.errorCount} files were not extracted successfully.`
+                : "."}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="pt-2">
@@ -557,15 +557,15 @@ export function AccountImportDialog({ disabled, onImported }: AccountImportDialo
               onClick={() => setConfirmOpen(false)}
               disabled={isSubmitting}
             >
-              返回
+              Back
             </Button>
             <Button
               className="h-10 rounded-xl bg-stone-950 px-5 text-white hover:bg-stone-800"
-              onClick={() => void submitTokens(pendingCpaImport?.tokens ?? [], "CPA JSON 导入完成")}
+              onClick={() => void submitTokens(pendingCpaImport?.tokens ?? [], "CPA JSON import complete")}
               disabled={isSubmitting || !pendingCpaImport}
             >
               {isSubmitting ? <LoaderCircle className="size-4 animate-spin" /> : null}
-              确认导入
+              Confirm Import
             </Button>
           </DialogFooter>
         </DialogContent>

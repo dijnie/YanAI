@@ -1,36 +1,36 @@
-# 功能状态
+# Feature Status
 
-本文基于当前仓库当前实现整理，用于帮助用户快速了解哪些功能已经可用、哪些仍在完善、哪些待实现。
+This document is based on the current implementation in this repository and helps users quickly understand which features are available, which are still being refined, and which are pending.
 
-| 功能 | 状态 | 说明 |
+| Feature | Status | Notes |
 |:----------------------------------------|:--:|:--------------------------------------------------------------|
-| OpenAI 兼容 `POST /v1/images/generations` | ✅  | 已支持，用于图片生成，并可通过 `n` 返回多张图片。 |
-| OpenAI 兼容 `POST /v1/images/edits` | ✅  | 已支持，可上传图片进行编辑。 |
-| 面向图片工作流的 `POST /v1/chat/completions` | ✅  | 已支持图片相关请求。 |
-| 面向图片工作流的 `POST /v1/responses` | ✅  | 已支持图片生成工具调用。 |
-| `GET /v1/models` 接口 | ✅  | 当前返回 `gpt-image-2`、`codex-gpt-image-2`、`auto`、`gpt-5`、`gpt-5-1`、`gpt-5-2`、`gpt-5-3`、`gpt-5-3-mini`、`gpt-5-mini`。 |
-| 同时生成多张图片 | ✅  | 已支持，后端与前端都可进行多图生成。 |
-| 前端图片工作台 | ✅  | 已支持图片生成、图片编辑、模型选择、历史记录与查看大图。 |
-| 前端图片输入 / 参考图交互 | ✅  | 已支持参考图上传、预览、移除和编辑模式工作流。 |
-| Codex 画图接口逆向 | ✅  | 已支持，仅 `Plus` / `Team` / `Pro` 订阅可用，模型别名为 `codex-gpt-image-2`；如有需要可自行在其他场景映射回 `gpt-image-2`。这是 Codex 逆向链路，用于和官网画图区分，同一账号通常会同时支持官网和 Codex 两份生图额度。 |
-| Cherry Studio 接入 | ✅  | 已支持作为绘图接口接入 Cherry Studio。 |
-| New API 接入 | ✅  | 已支持接入 New API。 |
-| 账号池管理 | ✅  | 已支持列表、筛选、批量操作、导出、手动编辑、刷新和删除。 |
-| 账号额度刷新与恢复时间同步 | ✅  | 已支持账号信息刷新，限流账号也会自动继续检查。 |
-| 失效 Token 自动清理 | ✅  | 已支持自动移除失效 Token。 |
-| CPA 连接管理 | ✅  | 已支持 CPA 连接的新增、修改、查询和删除。 |
-| CPA 文件浏览与按需导入 | ✅  | 已支持读取远程文件列表、筛选、勾选并导入到本地号池。 |
-| CPA 导入进度跟踪 | ✅  | 已支持导入进度展示与轮询更新。 |
-| `sub2api` 连接管理与账号浏览 | ✅  | 已支持 `sub2api` 服务器的新增、修改、删除、分组查询和 OpenAI OAuth 账号列表读取。 |
-| `sub2api` 导入 | ✅  | 已支持勾选 `sub2api` 中的 OpenAI OAuth 账号，批量拉取 `access_token` 导入本地号池，并展示导入进度。 |
-| Docker 自托管部署 | ✅  | 已支持 Docker Compose 部署，并提供多架构镜像。 |
-| 兼容接口中的多参考图能力 | ✅  | 已实现，支持在兼容接口中传入多参考图。 |
-| 更高级的 Token 调度策略 | ⚠️ | 当前已有基础轮询与限流刷新机制，更复杂的调度策略仍在完善中。 |
-| Render / Vercel 等部署表述 | ⚠️ | 当前主要以 Docker 部署为主，其他平台部署方式暂未重点说明。 |
-| `/v1/complete` 文本补全与流式输出 | ✅  | 已实现。 |
-| 流式输出支持 | ✅  | 已实现。 |
-| 图片尺寸参数 | ❌  | 待实现。 |
-| 服务端图片 URL 缓存 | ✅  | 已实现。 |
-| `rt_token` 刷新 | ❌  | 待实现。 |
-| 代理配置功能 | ✅  | 已支持网页端配置全局 HTTP / HTTPS / SOCKS5 / SOCKS5H 代理，并应用到出站请求。 |
-| Anthropic 协议支持 | ❌  | 待实现。 |
+| OpenAI-compatible `POST /v1/images/generations` | ✅  | Supported, used for image generation; multiple images can be returned via `n`. |
+| OpenAI-compatible `POST /v1/images/edits` | ✅  | Supported; images can be uploaded for editing. |
+| Image-workflow-oriented `POST /v1/chat/completions` | ✅  | Image-related requests are supported. |
+| Image-workflow-oriented `POST /v1/responses` | ✅  | Image generation tool calls are supported. |
+| `GET /v1/models` endpoint | ✅  | Currently returns `gpt-image-2`, `codex-gpt-image-2`, `auto`, `gpt-5`, `gpt-5-1`, `gpt-5-2`, `gpt-5-3`, `gpt-5-3-mini`, `gpt-5-mini`. |
+| Generating multiple images at once | ✅  | Supported; both the backend and frontend can generate multiple images. |
+| Frontend image workbench | ✅  | Supports image generation, image editing, model selection, history, and full-size viewing. |
+| Frontend image input / reference image interaction | ✅  | Supports reference image upload, preview, removal, and the edit-mode workflow. |
+| Reverse-engineered Codex image API | ✅  | Supported, available only with `Plus` / `Team` / `Pro` subscriptions; the model alias is `codex-gpt-image-2`, and you can map it back to `gpt-image-2` in other scenarios if needed. This is the Codex reverse-engineered pipeline, distinguished from website-based drawing; the same account usually carries both the website and Codex image generation quotas. |
+| Cherry Studio integration | ✅  | Supported as a drawing API for Cherry Studio. |
+| New API integration | ✅  | Supported as a New API integration. |
+| Account pool management | ✅  | Supports listing, filtering, batch operations, export, manual editing, refresh, and deletion. |
+| Account quota refresh and recovery time sync | ✅  | Account info refresh is supported; rate-limited accounts also continue to be checked automatically. |
+| Automatic cleanup of expired tokens | ✅  | Invalid tokens are removed automatically. |
+| CPA connection management | ✅  | Supports adding, modifying, querying, and deleting CPA connections. |
+| CPA file browsing and on-demand import | ✅  | Supports reading the remote file list, filtering, selecting, and importing into the local account pool. |
+| CPA import progress tracking | ✅  | Supports import progress display with polling updates. |
+| `sub2api` connection management and account browsing | ✅  | Supports adding, modifying, and deleting `sub2api` servers, querying by group, and listing OpenAI OAuth accounts. |
+| `sub2api` import | ✅  | Supports selecting OpenAI OAuth accounts in `sub2api`, batch-fetching their `access_token`s into the local account pool, and displaying import progress. |
+| Self-hosted Docker deployment | ✅  | Docker Compose deployment is supported, with multi-architecture images. |
+| Multi-reference-image support in compatible endpoints | ✅  | Implemented; multiple reference images can be passed through the compatible endpoints. |
+| More advanced token scheduling strategies | ⚠️ | Basic rotation and rate-limit refresh are in place; more sophisticated scheduling strategies are still being refined. |
+| Render / Vercel deployment guidance | ⚠️ | Docker is the primary deployment method; other platforms are not yet a documentation focus. |
+| `/v1/complete` text completion with streaming | ✅  | Implemented. |
+| Streaming output support | ✅  | Implemented. |
+| Image size parameter | ❌  | Pending. |
+| Server-side image URL caching | ✅  | Implemented. |
+| `rt_token` refresh | ❌  | Pending. |
+| Proxy configuration | ✅  | Supports configuring a global HTTP / HTTPS / SOCKS5 / SOCKS5H proxy from the web UI, applied to outbound requests. |
+| Anthropic protocol support | ❌  | Pending. |

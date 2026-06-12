@@ -1,11 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="720" viewBox="0 0 960 720" role="img" aria-label="疯狂动物城海报示例图">
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="720" viewBox="0 0 960 720" role="img" aria-label="Zootopia poster example">
   <rect width="960" height="720" fill="#fde68a"/>
   <rect x="0" y="438" width="960" height="282" fill="#86efac"/>
   <circle cx="762" cy="122" r="74" fill="#f97316"/>
   <rect x="128" y="180" width="190" height="300" rx="34" fill="#60a5fa"/>
   <rect x="370" y="110" width="220" height="370" rx="40" fill="#fb7185"/>
   <rect x="648" y="230" width="160" height="250" rx="32" fill="#a78bfa"/>
-  <text x="120" y="580" fill="#27272a" font-family="Arial, sans-serif" font-size="58" font-weight="800">城市冒险海报</text>
+  <text x="120" y="580" fill="#27272a" font-family="Arial, sans-serif" font-size="58" font-weight="800">Urban adventure poster</text>
   <text x="124" y="626" fill="#57534e" font-family="Arial, sans-serif" font-size="28">character poster layout</text>
   <circle cx="485" cy="300" r="78" fill="#fff7ed"/>
   <circle cx="454" cy="286" r="9" fill="#111827"/>

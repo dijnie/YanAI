@@ -135,7 +135,7 @@ function MyImagesContent() {
         setPage(data.pagination.page);
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "加载图片失败");
+      toast.error(error instanceof Error ? error.message : "Failed to load images");
     } finally {
       setIsLoading(false);
     }
@@ -146,7 +146,7 @@ function MyImagesContent() {
       const data = await fetchMyImagesWebDAVConfig();
       setWebdavConfig(data.webdav);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "加载 WebDAV 配置失败");
+      toast.error(error instanceof Error ? error.message : "Failed to load WebDAV configuration");
     }
   };
 
@@ -156,9 +156,9 @@ function MyImagesContent() {
       const data = await updateMyImagesWebDAVConfig(payload);
       setWebdavConfig(data.webdav);
       setWebdavOpen(false);
-      toast.success("WebDAV 配置已保存");
+      toast.success("WebDAV configuration saved");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "保存 WebDAV 配置失败");
+      toast.error(error instanceof Error ? error.message : "Failed to save WebDAV configuration");
     } finally {
       setIsSavingWebDAV(false);
     }
@@ -167,26 +167,26 @@ function MyImagesContent() {
   const syncToWebDAV = async () => {
     if (!webdavConfig?.enabled) {
       setWebdavOpen(true);
-      toast.error("请先启用 WebDAV 配置");
+      toast.error("Enable WebDAV configuration first");
       return;
     }
     const selectedIds = selectedTargets
       .map((item) => item.record_id || item.id || "")
       .filter((value) => value.trim());
     if (selectedTargets.length > 0 && selectedIds.length === 0) {
-      toast.error("选中的图片没有可同步的记录 ID");
+      toast.error("Selected images do not have syncable record IDs");
       return;
     }
     setIsSyncingWebDAV(true);
     try {
       const data = await syncMyImagesToWebDAV({ start_date: startDate, end_date: endDate, ids: selectedIds });
       const result = data.result;
-      const scopeText = selectedIds.length > 0 ? "所选图片" : "筛选范围";
-      toast.success(`${scopeText}已同步 ${result.uploaded} 张，跳过 ${result.skipped} 张，失败 ${result.failed} 张`);
+      const scopeText = selectedIds.length > 0 ? "Selected images" : "Filtered scope";
+      toast.success(`${scopeText} synced ${result.uploaded} images, skipped ${result.skipped} images, failed ${result.failed} images`);
       await loadImages();
       await loadWebDAVConfig();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "同步到 WebDAV 失败");
+      toast.error(error instanceof Error ? error.message : "Failed to sync to WebDAV");
     } finally {
       setIsSyncingWebDAV(false);
     }
@@ -222,13 +222,13 @@ function MyImagesContent() {
 
   const openDeleteSelected = () => {
     if (selectedTargets.length === 0) {
-      toast.error("请先选择要删除的图片");
+      toast.error("Select images to delete first");
       return;
     }
     setDeleteTarget(selectedTargets);
   };
 
-  const handleDeleteImages = async () => {
+  const handleDelete Images = async () => {
     if (!deleteTarget || deleteTarget.length === 0) return;
     setIsDeleting(true);
     try {
@@ -236,10 +236,10 @@ function MyImagesContent() {
       const deletedKeys = new Set(deleteTarget.map(imageKey));
       setSelectedItems((current) => Object.fromEntries(Object.entries(current).filter(([key]) => !deletedKeys.has(key))));
       setDeleteTarget(null);
-      toast.success(`已删除 ${data.removed} 张图片`);
+      toast.success(`Deleted ${data.removed} imagesImages`);
       await loadImages();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "删除图片失败");
+      toast.error(error instanceof Error ? error.message : "Delete ImagesFailed");
     } finally {
       setIsDeleting(false);
     }
@@ -247,16 +247,16 @@ function MyImagesContent() {
 
   const downloadSelectedImages = async () => {
     if (selectedTargets.length === 0) {
-      toast.error("请先选择要下载的图片");
+      toast.error("Select images to download first");
       return;
     }
     setIsDownloading(true);
     try {
       const blob = await downloadMyImages(selectedTargets);
       downloadBlob(blob, `my-images-${Date.now()}.zip`);
-      toast.success(`已开始下载 ${selectedTargets.length} 张图片`);
+      toast.success(`Started downloading ${selectedTargets.length} imagesImages`);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "下载图片失败");
+      toast.error(error instanceof Error ? error.message : "Failed to download images");
     } finally {
       setIsDownloading(false);
     }
@@ -276,7 +276,7 @@ function MyImagesContent() {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="space-y-1">
           <div className="text-xs font-semibold tracking-[0.18em] text-rose-400 uppercase">My Images</div>
-          <h1 className="text-2xl font-semibold tracking-tight">我的图片</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">My Images</h1>
         </div>
         <div className="flex flex-wrap gap-2">
           <DateRangeFilter
@@ -294,14 +294,14 @@ function MyImagesContent() {
           </Button>
           <Button variant="outline" onClick={() => void syncToWebDAV()} disabled={isSyncingWebDAV} className="h-10 rounded-xl border-rose-100 bg-white px-4 text-stone-700">
             {isSyncingWebDAV ? <LoaderCircle className="size-4 animate-spin" /> : <CloudUpload className="size-4" />}
-            同步
+            Sync
           </Button>
           <Button variant="outline" onClick={() => { setStartDate(""); setEndDate(""); setPage(1); }} className="h-10 rounded-xl border-rose-100 bg-white px-4 text-stone-700">
-            清除筛选
+            Clear Filters
           </Button>
           <Button onClick={() => void loadImages()} disabled={isLoading} className="h-10 rounded-xl bg-rose-500 px-4 text-white hover:bg-rose-600">
             <RefreshCw className={`size-4 ${isLoading ? "animate-spin" : ""}`} />
-            刷新
+            Refresh
           </Button>
         </div>
       </div>
@@ -312,24 +312,24 @@ function MyImagesContent() {
             <div className="flex flex-wrap items-center gap-3 text-sm text-stone-600">
               <span className="flex items-center gap-2">
                 <ImageIcon className="size-4 text-rose-500" />
-                共 {total} 张
+                Total {total} images
               </span>
-              {selectedCount > 0 ? <span className="rounded-full bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700">已选 {selectedCount} 张</span> : null}
+              {selectedCount > 0 ? <span className="rounded-full bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700">Selected {selectedCount} images</span> : null}
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <div className="flex h-8 items-center gap-2 rounded-lg border border-rose-100 bg-white px-3 text-sm text-stone-600">
                 <Checkbox
                   checked={allCurrentSelected ? true : someCurrentSelected ? "indeterminate" : false}
                   onCheckedChange={(checked) => toggleRows(checked === true)}
-                  aria-label="选择本页图片"
+                  aria-label="Select images on this page"
                   disabled={items.length === 0 || isLoading}
                 />
-                本页全选
+                Select Page
               </div>
               {selectedCount > 0 ? (
                 <Button variant="ghost" className="h-8 rounded-lg px-3 text-stone-500" onClick={() => setSelectedItems({})}>
                   <X className="size-4" />
-                  清空选择
+                  Clear Selection
                 </Button>
               ) : null}
               <Button
@@ -339,7 +339,7 @@ function MyImagesContent() {
                 disabled={selectedCount === 0 || isLoading || isDownloading}
               >
                 {isDownloading ? <LoaderCircle className="size-4 animate-spin" /> : <Download className="size-4" />}
-                下载所选
+                Download Selected
               </Button>
               <Button
                 variant="destructive"
@@ -348,7 +348,7 @@ function MyImagesContent() {
                 disabled={selectedCount === 0 || isLoading || isDeleting}
               >
                 {isDeleting ? <LoaderCircle className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
-                删除所选
+                Delete Selected
               </Button>
             </div>
           </div>
@@ -357,7 +357,7 @@ function MyImagesContent() {
               <LoaderCircle className="size-5 animate-spin text-rose-400" />
             </div>
           ) : items.length === 0 ? (
-            <div className="px-6 py-14 text-center text-sm text-stone-500">还没有生成过图片</div>
+            <div className="px-6 py-14 text-center text-sm text-stone-500">No images generated yet</div>
           ) : (
             <div className="grid gap-0 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {items.map((item, index) => {
@@ -369,7 +369,7 @@ function MyImagesContent() {
                       <Checkbox
                         checked={selected}
                         onCheckedChange={(checked) => toggleImage(item, checked === true)}
-                        aria-label="选择图片"
+                        aria-label="Select Image"
                         className="size-5 border-rose-200 bg-white"
                       />
                     </div>
@@ -399,10 +399,10 @@ function MyImagesContent() {
                             className="size-8 rounded-lg text-stone-400 hover:bg-rose-50 hover:text-rose-600"
                             onClick={() => {
                               downloadUrl(item);
-                              toast.success("已开始下载图片");
+                              toast.success("Started downloading image");
                             }}
-                            aria-label="下载图片"
-                            title="下载图片"
+                            aria-label="Download Image"
+                            title="Download Image"
                           >
                             <Download className="size-4" />
                           </Button>
@@ -412,10 +412,10 @@ function MyImagesContent() {
                             className="size-8 rounded-lg text-stone-400 hover:bg-rose-50 hover:text-rose-600"
                             onClick={() => {
                               void navigator.clipboard.writeText(item.url);
-                              toast.success("图片地址已复制");
+                              toast.success("Image URL copied");
                             }}
-                            aria-label="复制图片地址"
-                            title="复制图片地址"
+                            aria-label="Copy Image URL"
+                            title="Copy Image URL"
                           >
                             <Copy className="size-4" />
                           </Button>
@@ -423,7 +423,7 @@ function MyImagesContent() {
                       </div>
                       <div className="flex items-center justify-between gap-2">
                         <span>{formatSize(item.size)}</span>
-                        <span>{item.webdav_status === "synced" ? "WebDAV 已同步" : ""}</span>
+                        <span>{item.webdav_status === "synced" ? "WebDAV synced" : ""}</span>
                       </div>
                     </div>
                   </div>
@@ -433,7 +433,7 @@ function MyImagesContent() {
           )}
           {!isLoading && total > 0 ? (
             <div className="flex items-center justify-end gap-2 border-t border-rose-50 px-4 py-3 text-sm text-stone-500">
-              <span>第 {safePage} / {pageCount} 页，共 {total} 张</span>
+              <span>Page {safePage} / {pageCount} of {total} images</span>
               <Button variant="outline" size="icon" className="size-9 rounded-lg border-rose-100 bg-white" disabled={safePage <= 1} onClick={() => setPage((value) => Math.max(1, value - 1))}>
                 <ChevronLeft className="size-4" />
               </Button>
@@ -456,23 +456,23 @@ function MyImagesContent() {
         onOpenChange={setWebdavOpen}
         config={webdavConfig}
         isSaving={isSavingWebDAV}
-        title="WebDAV 设置"
-        description="保存我的图片到远程目录"
+        title="WebDAV Settings"
+        description="Save my images to a remote directory"
         onSave={saveWebDAVConfig}
       />
       <Dialog open={Boolean(deleteTarget)} onOpenChange={(open) => (!open ? setDeleteTarget(null) : null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{deleteCount === 1 ? "删除图片" : "批量删除图片"}</DialogTitle>
-            <DialogDescription>确认删除选中的 {deleteCount} 张图片吗？删除后图片文件和记录将无法恢复。</DialogDescription>
+            <DialogTitle>{deleteCount === 1 ? "Delete Images" : "Delete Images"}</DialogTitle>
+            <DialogDescription>Delete the selected {deleteCount} images? Image files and records cannot be restored after deletion.</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteTarget(null)} disabled={isDeleting}>
-              取消
+              Cancel
             </Button>
-            <Button variant="destructive" onClick={() => void handleDeleteImages()} disabled={isDeleting}>
+            <Button variant="destructive" onClick={() => void handleDelete Images()} disabled={isDeleting}>
               {isDeleting ? <LoaderCircle className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
-              删除
+              Delete
             </Button>
           </DialogFooter>
         </DialogContent>

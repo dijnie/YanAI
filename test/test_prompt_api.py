@@ -39,7 +39,7 @@ class PromptApiTests(unittest.TestCase):
 
                 created = client.post(
                     "/api/me/prompts",
-                    json={"title": "用户提示词", "prompt": "生成一张干净海报"},
+                    json={"title": "User Prompt", "prompt": "Generate a clean poster"},
                 )
                 self.assertEqual(created.status_code, 200, created.text)
                 prompt_id = created.json()["item"]["id"]
@@ -55,7 +55,7 @@ class PromptApiTests(unittest.TestCase):
 
                 shared = client.post(
                     "/api/prompts/share",
-                    json={"title": "分享提示词", "prompt": "生成一张电影海报"},
+                    json={"title": "Shared Prompt", "prompt": "Generate a movie poster"},
                 )
                 self.assertEqual(shared.status_code, 200, shared.text)
                 share_id = shared.json()["share_id"]

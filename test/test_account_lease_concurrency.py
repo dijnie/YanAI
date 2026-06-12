@@ -24,8 +24,8 @@ class AccountLeaseConcurrencyTest(unittest.TestCase):
             service = AccountService(storage.repository_provider)
             service.add_account_items(
                 [
-                    {"access_token": "token-a", "status": "正常", "quota": 20, "max_concurrency": 2},
-                    {"access_token": "token-b", "status": "正常", "quota": 20, "max_concurrency": 1},
+                    {"access_token": "token-a", "status": "Active", "quota": 20, "max_concurrency": 2},
+                    {"access_token": "token-b", "status": "Active", "quota": 20, "max_concurrency": 1},
                 ]
             )
 
@@ -81,7 +81,7 @@ class AccountLeaseConcurrencyTest(unittest.TestCase):
                 [
                     {
                         "access_token": "token-a",
-                        "status": "正常",
+                        "status": "Active",
                         "quota": 5,
                         "max_concurrency": 1,
                         "inflight_count": 1,
@@ -105,10 +105,10 @@ class AccountLeaseConcurrencyTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp_dir:
             storage = DatabaseStorageBackend(f"sqlite:///{(Path(tmp_dir) / 'refresh.db').as_posix()}")
             service = AccountService(storage.repository_provider)
-            service.add_account_items([{"access_token": "token-a", "status": "正常", "quota": 5}])
+            service.add_account_items([{"access_token": "token-a", "status": "Active", "quota": 5}])
 
             lease = service.lease_available_account(lease_owner="task-owner", ttl_seconds=60)
-            service.update_account("token-a", {"quota": 4, "status": "正常"})
+            service.update_account("token-a", {"quota": 4, "status": "Active"})
 
             account = service.export_accounts(["token-a"])["items"][0]
             self.assertEqual(account["inflight_count"], 1)
@@ -126,7 +126,7 @@ class AccountLeaseConcurrencyTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp_dir:
             storage = DatabaseStorageBackend(f"sqlite:///{(Path(tmp_dir) / 'closed.db').as_posix()}")
             service = AccountService(storage.repository_provider)
-            service.add_account_items([{"access_token": "token-a", "status": "正常", "quota": 5}])
+            service.add_account_items([{"access_token": "token-a", "status": "Active", "quota": 5}])
 
             class FakeBackend:
                 def __init__(self, access_token: str) -> None:

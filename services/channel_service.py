@@ -76,11 +76,11 @@ EXTERNAL_IMAGE_RATIO_SIZE_ALIASES = {
 }
 
 EXTERNAL_IMAGE_RATIO_PROMPT_HINTS = {
-    "1:1": "输出为 1:1 正方形构图，主体居中，适合正方形画幅。",
-    "16:9": "输出为 16:9 横屏构图，适合宽画幅展示。",
-    "9:16": "输出为 9:16 竖屏构图，适合竖版画幅展示。",
-    "4:3": "输出为 4:3 比例，兼顾宽度与高度，适合展示画面细节。",
-    "3:4": "输出为 3:4 比例，纵向构图，适合人物肖像或竖向场景。",
+    "1:1": "Output in a 1:1 square composition with the subject centered, suitable for square frames.",
+    "16:9": "Output in a 16:9 landscape composition, suitable for wide-frame presentation.",
+    "9:16": "Output in a 9:16 portrait composition, suitable for vertical-frame presentation.",
+    "4:3": "Output in a 4:3 ratio balancing width and height, suitable for showcasing image details.",
+    "3:4": "Output in a 3:4 ratio with a vertical composition, suitable for portraits or vertical scenes.",
 }
 
 
@@ -129,13 +129,14 @@ def _friendly_channel_error(error: object) -> str:
     normalized = message.lower()
     if "curl: (35)" in normalized or "connection was reset" in normalized or "recv failure" in normalized:
         return (
-            "连接被上游重置（curl 35）。请检查个人渠道 Base URL 是否正确、API Key 是否有效、"
-            "该渠道是否允许当前网络访问；如果系统设置里配置了代理，也请确认代理可用。"
+            "Connection was reset by the upstream (curl 35). Please check that the personal channel Base URL is correct, "
+            "the API Key is valid, and the channel allows access from the current network; if a proxy is configured in "
+            "system settings, please also confirm the proxy is available."
         )
     if "curl: (28)" in normalized or "timed out" in normalized or "timeout" in normalized:
-        return "连接个人渠道超时。请检查渠道地址、代理或把个人渠道超时秒数调大后重试。"
+        return "Connection to the personal channel timed out. Please check the channel address or proxy, or increase the personal channel timeout seconds and retry."
     if "proxy" in normalized and ("connect" in normalized or "failed" in normalized or "refused" in normalized):
-        return "代理连接失败。请检查系统设置里的代理地址是否可用，或暂时清空代理后重试个人渠道。"
+        return "Proxy connection failed. Please check that the proxy address in system settings is available, or temporarily clear the proxy and retry the personal channel."
     return message
 
 
@@ -152,7 +153,7 @@ class ChannelService:
         if not isinstance(raw, dict):
             return None
         channel_id = _clean(raw.get("id")) or uuid.uuid4().hex[:12]
-        name = _clean(raw.get("name")) or "OpenAI 图片渠道"
+        name = _clean(raw.get("name")) or "OpenAI Image Channel"
         channel_type = _clean(raw.get("type")) or "openai_image"
         if channel_type != "openai_image":
             channel_type = "openai_image"
@@ -278,7 +279,7 @@ class ChannelService:
     def _internal_channel(self) -> dict[str, object]:
         return {
             "id": "internal_pool",
-            "name": "内置账号池",
+            "name": "Built-in Account Pool",
             "type": "internal_pool",
             "base_url": "",
             "models": list(DEFAULT_INTERNAL_MODELS),
@@ -305,7 +306,7 @@ class ChannelService:
         channel = self._normalize({
             **raw,
             "id": f"{PERSONAL_CHANNEL_ID_PREFIX}:{_clean(owner_user_id) or 'current'}",
-            "name": _clean(raw.get("name")) or "个人生图渠道",
+            "name": _clean(raw.get("name")) or "Personal Image Channel",
             "type": "openai_image",
             "weight": 1,
             "priority": 100000,
@@ -395,7 +396,7 @@ class ChannelService:
     def _channel_result_name(channel: dict[str, object]) -> str:
         name = str(channel.get("name") or channel.get("id") or "").strip()
         if channel.get("_personal_channel"):
-            return f"个人渠道/{name or 'personal'}"
+            return f"Personal Channel/{name or 'personal'}"
         return name or "external_channel"
 
     def list_channels(self, include_internal: bool = True) -> list[dict[str, object]]:
@@ -536,13 +537,14 @@ class ChannelService:
         )
         if not response.ok:
             detail = _response_preview(response)
-            suffix = f"：{detail}" if detail else ""
+            suffix = f": {detail}" if detail else ""
             if int(response.status_code) in {404, 405}:
                 raise RuntimeError(
-                    f"渠道模型列表接口不可用：GET /v1/models 返回 HTTP {response.status_code}{suffix}。"
-                    "该渠道可能不支持模型列表接口；可保存渠道后直接生图，或更换支持 /v1/models 的 OpenAI 兼容地址。"
+                    f"Channel model list endpoint is unavailable: GET /v1/models returned HTTP {response.status_code}{suffix}. "
+                    "This channel may not support the model list endpoint; you can save the channel and generate images directly, "
+                    "or switch to an OpenAI-compatible address that supports /v1/models."
                 )
-            raise RuntimeError(f"模型列表请求失败：HTTP {response.status_code}{suffix}")
+            raise RuntimeError(f"Model list request failed: HTTP {response.status_code}{suffix}")
         try:
             payload = response.json()
         except Exception as exc:
@@ -622,7 +624,7 @@ class ChannelService:
                 "ok": False,
                 "channel": {
                     "id": f"{PERSONAL_CHANNEL_ID_PREFIX}:{_clean(owner_user_id) or 'current'}",
-                    "name": "个人生图渠道",
+                    "name": "Personal Image Channel",
                     "type": "openai_image",
                     "base_url": "",
                     "models": [],

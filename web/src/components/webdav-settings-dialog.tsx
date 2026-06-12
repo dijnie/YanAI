@@ -71,10 +71,10 @@ export function WebDAVSettingsDialog({
         <div className="space-y-4 py-1">
           <label className="flex items-center gap-3 rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-stone-700">
             <Checkbox checked={enabled} onCheckedChange={(checked) => setEnabled(checked === true)} />
-            启用自动保存
+            Enable auto save
           </label>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-stone-700">WebDAV 地址</label>
+            <label className="text-sm font-medium text-stone-700">WebDAV URL</label>
             <Input
               value={url}
               onChange={(event) => setUrl(event.target.value)}
@@ -84,7 +84,7 @@ export function WebDAVSettingsDialog({
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-stone-700">用户名</label>
+              <label className="text-sm font-medium text-stone-700">Username</label>
               <Input
                 value={username}
                 onChange={(event) => setUsername(event.target.value)}
@@ -92,18 +92,18 @@ export function WebDAVSettingsDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-stone-700">密码</label>
+              <label className="text-sm font-medium text-stone-700">Password</label>
               <Input
                 value={password}
                 type="password"
                 onChange={(event) => setPassword(event.target.value)}
-                placeholder={config?.password_set ? "留空则保持原密码" : ""}
+                placeholder={config?.password_set ? "Leave blank to keep current password" : ""}
                 className="h-10 rounded-lg border-stone-200 bg-white"
               />
             </div>
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-stone-700">远程目录</label>
+            <label className="text-sm font-medium text-stone-700">Remote Directory</label>
             <Input
               value={rootPath}
               onChange={(event) => setRootPath(event.target.value)}
@@ -114,11 +114,11 @@ export function WebDAVSettingsDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>
-            取消
+            Cancel
           </Button>
           <Button onClick={() => void handleSave()} disabled={isSaving}>
             {isSaving ? <LoaderCircle className="size-4 animate-spin" /> : <Save className="size-4" />}
-            保存
+            Save
           </Button>
         </DialogFooter>
       </DialogContent>

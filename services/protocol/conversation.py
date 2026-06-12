@@ -110,13 +110,13 @@ def build_image_prompt(prompt: str, size: str | None) -> str:
     if not size:
         return prompt
     if size not in {"1:1", "16:9", "9:16", "4:3", "3:4"}:
-        return f"{prompt.strip()}\n\n输出图片，宽高比为 {size}。"
+        return f"{prompt.strip()}\n\nOutput an image with an aspect ratio of {size}."
     hint = {
-        "1:1": "输出为 1:1 正方形构图，主体居中，适合正方形画幅。",
-        "16:9": "输出为 16:9 横屏构图，适合宽画幅展示。",
-        "9:16": "输出为 9:16 竖屏构图，适合竖版画幅展示。",
-        "4:3": "输出为 4:3 比例，兼顾宽度与高度，适合展示画面细节。",
-        "3:4": "输出为 3:4 比例，纵向构图，适合人物肖像或竖向场景。",
+        "1:1": "Output in a 1:1 square composition with the subject centered, suitable for square frames.",
+        "16:9": "Output in a 16:9 landscape composition, suitable for wide-frame presentation.",
+        "9:16": "Output in a 9:16 portrait composition, suitable for vertical-frame presentation.",
+        "4:3": "Output in a 4:3 ratio balancing width and height, suitable for showcasing image details.",
+        "3:4": "Output in a 3:4 ratio with a vertical composition, suitable for portraits or vertical scenes.",
     }[size]
     return f"{prompt.strip()}\n\n{hint}"
 
@@ -547,7 +547,7 @@ def stream_image_outputs_with_pool(request: ConversationRequest) -> Iterator[Ima
                 token = lease.access_token
                 log_service.add(
                     LOG_TYPE_ACCOUNT,
-                    "获取账号租约",
+                    "Acquire account lease",
                     {
                         "request_id": lease.lease_owner,
                         "lease_owner": lease.lease_owner,
@@ -582,7 +582,7 @@ def stream_image_outputs_with_pool(request: ConversationRequest) -> Iterator[Ima
                 }
                 if error:
                     detail["error"] = error
-                log_service.add(LOG_TYPE_ACCOUNT, "释放账号租约", detail, request_id=lease.lease_owner)
+                log_service.add(LOG_TYPE_ACCOUNT, "Release account lease", detail, request_id=lease.lease_owner)
 
             try:
                 backend = OpenAIBackendAPI(access_token=token)

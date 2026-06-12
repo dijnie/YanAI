@@ -77,7 +77,7 @@ function draftToPayload(model: string, draft: DraftPricing): ModelPricingPayload
 }
 
 function channelLabel(channel: ModelChannelSummary) {
-  if (channel.id === "internal_pool") return "内置账号池";
+  if (channel.id === "internal_pool") return "Built-in Account Pool";
   return channel.name || channel.id;
 }
 
@@ -103,7 +103,7 @@ function ModelsContent() {
       const data = await fetchModelCatalog();
       applyCatalog(data.items, data.channels);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "加载模型失败");
+      toast.error(error instanceof Error ? error.message : "Failed to load models");
     } finally {
       setIsLoading(false);
     }
@@ -141,9 +141,9 @@ function ModelsContent() {
     try {
       const data = await updateModelPricing(draftToPayload(model.model, draft));
       applyCatalog(data.items, data.channels);
-      toast.success("模型计费已保存");
+      toast.success("Model pricing saved");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "保存模型计费失败");
+      toast.error(error instanceof Error ? error.message : "Failed to save model pricing");
     } finally {
       setSavingModel("");
     }
@@ -154,9 +154,9 @@ function ModelsContent() {
     try {
       const data = await refreshChannelModels(channel.id);
       applyCatalog(data.items, data.channels);
-      toast.success(`已获取 ${data.models.length} 个模型`);
+      toast.success(`Fetched ${data.models.length} models`);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "获取渠道模型失败");
+      toast.error(error instanceof Error ? error.message : "Failed to fetch channel models");
     } finally {
       setRefreshingChannel("");
     }
@@ -167,11 +167,11 @@ function ModelsContent() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1">
           <div className="text-xs font-semibold tracking-[0.18em] text-rose-400 uppercase">Models</div>
-          <h1 className="text-2xl font-semibold tracking-tight">模型管理</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Model Management</h1>
         </div>
         <Button variant="outline" className="h-10 rounded-xl border-rose-100 bg-white" onClick={() => void load()}>
           {isLoading ? <LoaderCircle className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
-          刷新
+          Refresh
         </Button>
       </div>
 
@@ -179,7 +179,7 @@ function ModelsContent() {
         <CardContent className="space-y-4 p-5">
           <div className="flex items-center gap-2 text-sm font-semibold text-stone-800">
             <ServerCog className="size-4 text-rose-500" />
-            渠道模型
+            Channel Models
           </div>
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {channels.map((channel) => (
@@ -189,10 +189,10 @@ function ModelsContent() {
                     <div className="truncate font-medium text-stone-900">{channelLabel(channel)}</div>
                     <div className="truncate text-xs text-stone-400">{channel.base_url || channel.type}</div>
                   </div>
-                  <Badge variant={channel.enabled ? "success" : "secondary"}>{channel.enabled ? "启用" : "禁用"}</Badge>
+                  <Badge variant={channel.enabled ? "success" : "secondary"}>{channel.enabled ? "Enable" : "Disable"}</Badge>
                 </div>
                 <div className="flex items-center justify-between gap-3 text-xs text-stone-500">
-                  <span>{channel.model_count ?? channel.models?.length ?? 0} 个模型</span>
+                  <span>{channel.model_count ?? channel.models?.length ?? 0} models</span>
                   <Button
                     variant="outline"
                     size="sm"
@@ -201,7 +201,7 @@ function ModelsContent() {
                     disabled={Boolean(refreshingChannel)}
                   >
                     {refreshingChannel === channel.id ? <LoaderCircle className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
-                    获取
+                    Fetch
                   </Button>
                 </div>
               </div>
@@ -215,7 +215,7 @@ function ModelsContent() {
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-2 text-sm font-semibold text-stone-800">
               <BadgeDollarSign className="size-4 text-rose-500" />
-              计费标准
+              Pricing Rules
             </div>
             <div className="grid gap-2 sm:grid-cols-[minmax(180px,260px)_180px]">
               <div className="relative">
@@ -223,7 +223,7 @@ function ModelsContent() {
                 <Input
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="搜索模型或渠道"
+                  placeholder="Search models or channels"
                   className="h-10 rounded-xl border-rose-100 bg-white pl-9"
                 />
               </div>
@@ -232,7 +232,7 @@ function ModelsContent() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={ALL_CHANNELS}>全部渠道</SelectItem>
+                  <SelectItem value={ALL_CHANNELS}>All Channels</SelectItem>
                   {channels.map((channel) => (
                     <SelectItem key={channel.id} value={channel.id}>
                       {channelLabel(channel)}
@@ -245,21 +245,21 @@ function ModelsContent() {
 
           <div className="overflow-hidden rounded-lg border border-rose-50 bg-white/70">
             <div className="hidden border-b border-rose-50 px-4 py-3 text-xs font-semibold text-stone-500 xl:grid xl:grid-cols-[minmax(190px,1.3fr)_minmax(150px,1fr)_116px_130px_130px_110px_120px_88px] xl:items-center xl:gap-3">
-              <div>模型</div>
-              <div>渠道</div>
-              <div>模式</div>
-              <div>输入价/1M</div>
-              <div>输出价/1M</div>
-              <div>补全倍率</div>
-              <div>固定价/次</div>
-              <div>操作</div>
+              <div>Model</div>
+              <div>Channel</div>
+              <div>Mode</div>
+              <div>Input Price / 1M</div>
+              <div>Output Price / 1M</div>
+              <div>Completion Multiplier</div>
+              <div>Fixed Price / Call</div>
+              <div>Actions</div>
             </div>
             {isLoading ? (
               <div className="flex h-44 items-center justify-center">
                 <LoaderCircle className="size-5 animate-spin text-rose-400" />
               </div>
             ) : filteredModels.length === 0 ? (
-              <div className="px-4 py-12 text-center text-sm text-stone-400">没有匹配的模型</div>
+              <div className="px-4 py-12 text-center text-sm text-stone-400">No matching models</div>
             ) : (
               filteredModels.map((model) => {
                 const draft = drafts[model.model] ?? pricingToDraft(model.pricing);
@@ -273,8 +273,8 @@ function ModelsContent() {
                           onCheckedChange={(checked) => updateDraft(model, { enabled: Boolean(checked) })}
                           className="size-4"
                         />
-                        <span>{draft.enabled ? "参与计费" : "停用计费"}</span>
-                        {model.configured ? <Badge variant="secondary">已配置</Badge> : null}
+                        <span>{draft.enabled ? "Billing Enabled" : "Billing Disabled"}</span>
+                        {model.configured ? <Badge variant="secondary">Configured</Badge> : null}
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-1.5">
@@ -285,7 +285,7 @@ function ModelsContent() {
                           </Badge>
                         ))
                       ) : (
-                        <span className="text-xs text-stone-400">自定义模型</span>
+                        <span className="text-xs text-stone-400">Custom Model</span>
                       )}
                     </div>
                     <Select value={draft.billing_mode} onValueChange={(value) => updateDraft(model, { billing_mode: value as BillingMode })}>
@@ -293,8 +293,8 @@ function ModelsContent() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="tokens">按 Token</SelectItem>
-                        <SelectItem value="fixed">按次</SelectItem>
+                        <SelectItem value="tokens">By Token</SelectItem>
+                        <SelectItem value="fixed">Fixed</SelectItem>
                       </SelectContent>
                     </Select>
                     <Input
@@ -337,7 +337,7 @@ function ModelsContent() {
                       disabled={Boolean(savingModel)}
                     >
                       {savingModel === model.model ? <LoaderCircle className="size-4 animate-spin" /> : <Save className="size-4" />}
-                      保存
+                      Save
                     </Button>
                   </div>
                 );

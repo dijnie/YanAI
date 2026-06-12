@@ -4,7 +4,7 @@ import "./globals.css";
 import { TopNav } from "@/components/top-nav";
 
 export const metadata: Metadata = {
-  title: "颜AI",
+  title: "YanAI",
   description: "AI image creation and management",
 };
 

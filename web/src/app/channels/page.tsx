@@ -65,47 +65,47 @@ const CHANNEL_FIELDS: Array<{
 }> = [
   {
     key: "name",
-    label: "名称",
-    description: "列表和日志中显示的渠道名称。",
-    placeholder: "名称",
+    label: "Name",
+    description: "Channel name shown in lists and logs.",
+    placeholder: "Name",
   },
   {
     key: "base_url",
     label: "Base URL",
-    description: "兼容 OpenAI 的服务根地址。",
+    description: "OpenAI-compatible service root URL.",
     placeholder: "https://api.example.com",
   },
   {
     key: "api_key",
     label: "API Key",
-    description: "新增必填，编辑时留空保持原密钥。",
+    description: "Required when creating; leave blank while editing to keep the current secret.",
     placeholder: "sk-...",
     type: "password",
   },
   {
     key: "models",
-    label: "模型",
-    description: "逗号分隔，匹配模型时才会走该渠道。",
+    label: "Model",
+    description: "Comma-separated. This channel is used only when the model matches.",
     placeholder: "gpt-image-2,codex-gpt-image-2",
   },
   {
     key: "weight",
-    label: "权重",
-    description: "同优先级下的随机命中权重。",
+    label: "Weight",
+    description: "Random selection weight among channels with the same priority.",
     placeholder: "1",
     type: "number",
   },
   {
     key: "priority",
-    label: "优先级",
-    description: "越高越先尝试。",
+    label: "Priority",
+    description: "Higher values are tried first.",
     placeholder: "0",
     type: "number",
   },
   {
     key: "timeout",
-    label: "超时",
-    description: "请求超时时间，单位秒。",
+    label: "Timeout",
+    description: "Request timeout in seconds.",
     placeholder: "60",
     type: "number",
   },
@@ -134,7 +134,7 @@ const toNumber = (value: string, fallback: number) => {
 };
 
 const channelTypeLabel = (channel: Channel) =>
-  channel.type === "internal_pool" ? "内置账号池" : "OpenAI 图片兼容";
+  channel.type === "internal_pool" ? "Built-in Account Pool" : "OpenAI Image Compatible";
 
 const uniqueModels = (models: string[] | undefined) => {
   const seen = new Set<string>();
@@ -190,7 +190,7 @@ function ChannelsContent() {
       const data = await fetchChannels();
       setItems(data.items);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "加载渠道失败");
+      toast.error(error instanceof Error ? error.message : "Failed to load channels");
     } finally {
       setIsLoading(false);
     }
@@ -207,7 +207,7 @@ function ChannelsContent() {
       })
       .catch((error: unknown) => {
         if (isMounted) {
-          toast.error(error instanceof Error ? error.message : "加载渠道失败");
+          toast.error(error instanceof Error ? error.message : "Failed to load channels");
         }
       })
       .finally(() => {
@@ -244,9 +244,9 @@ function ChannelsContent() {
       });
       setItems(data.items);
       setForm(resetForm());
-      toast.success("渠道已创建");
+      toast.success("Channel created");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "创建渠道失败");
+      toast.error(error instanceof Error ? error.message : "CreateChannelFailed");
     } finally {
       setIsCreating(false);
     }
@@ -257,9 +257,9 @@ function ChannelsContent() {
     try {
       const data = await updateChannel(channel.id, { enabled: !channel.enabled });
       setItems(data.items);
-      toast.success(channel.enabled ? "渠道已禁用" : "渠道已启用");
+      toast.success(channel.enabled ? "Channel disabled" : "Channel enabled");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "更新渠道失败");
+      toast.error(error instanceof Error ? error.message : "Failed to update channel");
     } finally {
       setSavingChannelId(null);
     }
@@ -270,9 +270,9 @@ function ChannelsContent() {
     try {
       const data = await deleteChannel(channel.id);
       setItems(data.items);
-      toast.success("渠道已删除");
+      toast.success("Channel deleted");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "删除渠道失败");
+      toast.error(error instanceof Error ? error.message : "DeleteChannelFailed");
     } finally {
       setSavingChannelId(null);
     }
@@ -297,7 +297,7 @@ function ChannelsContent() {
     const channel = modelTestChannel;
     if (!channel) return;
     if (selectedTestModels.length <= 0) {
-      toast.error("请选择至少一个测试模型");
+      toast.error("Select at least one model to test");
       return;
     }
     setTestingChannelId(channel.id);
@@ -305,13 +305,13 @@ function ChannelsContent() {
       const result = await testChannelModels(channel.id, selectedTestModels);
       setTestResults((current) => ({ ...current, [channel.id]: result }));
       if (result.ok) {
-        toast.success(`${channel.name} 模型测试通过：${result.tested_models.length} 个模型，${result.latency_ms}ms`);
+        toast.success(`${channel.name} model test passed: ${result.tested_models.length} models, ${result.latency_ms}ms`);
         setModelTestChannel(null);
       } else {
-        toast.error(result.error || `${channel.name} 模型测试失败`);
+        toast.error(result.error || `${channel.name} ModelTestFailed`);
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "模型测试失败");
+      toast.error(error instanceof Error ? error.message : "ModelTestFailed");
     } finally {
       setTestingChannelId(null);
     }
@@ -342,9 +342,9 @@ function ChannelsContent() {
       const data = await updateChannel(editingChannel.id, payload);
       setItems(data.items);
       setEditingChannel(null);
-      toast.success("渠道配置已保存");
+      toast.success("Channel configuration saved");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "保存渠道失败");
+      toast.error(error instanceof Error ? error.message : "SaveChannelFailed");
     } finally {
       setSavingChannelId(null);
     }
@@ -359,11 +359,11 @@ function ChannelsContent() {
       <div className="flex items-end justify-between gap-4">
         <div className="space-y-1">
           <div className="text-xs font-semibold tracking-[0.18em] text-rose-400 uppercase">Channels</div>
-          <h1 className="text-2xl font-semibold tracking-tight">渠道管理</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Channel Management</h1>
         </div>
         <Button variant="outline" className="h-10 rounded-xl border-rose-100 bg-white" onClick={() => void load()}>
           <RefreshCw className="size-4" />
-          刷新
+          Refresh
         </Button>
       </div>
 
@@ -372,9 +372,9 @@ function ChannelsContent() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2 text-sm font-semibold text-stone-800">
               <Plus className="size-4 text-rose-500" />
-              新增 OpenAI 图片兼容渠道
+              Added OpenAI Image CompatibleChannel
             </div>
-            <div className="text-xs text-stone-400">填写 OpenAI 兼容地址后，可在列表中测试模型接口。</div>
+            <div className="text-xs text-stone-400">After entering an OpenAI-compatible URL, you can test the model endpoint from the list.</div>
           </div>
           <div className="grid gap-3 lg:grid-cols-[1fr_1.4fr_1.15fr]">
             {PRIMARY_FIELDS.map((field) => (
@@ -419,7 +419,7 @@ function ChannelsContent() {
               onClick={() => void handleCreate()}
             >
               {isCreating ? <LoaderCircle className="size-4 animate-spin" /> : null}
-              创建
+              Create
             </Button>
           </div>
           <FieldHelpStrip />
@@ -429,12 +429,12 @@ function ChannelsContent() {
       <Card className="overflow-hidden rounded-lg border-white/80 bg-white/80 shadow-sm">
         <CardContent className="p-0">
           <div className="hidden border-b border-rose-50 px-5 py-3 text-xs font-semibold text-stone-500 lg:grid lg:grid-cols-[1.05fr_1.4fr_1.6fr_1fr_90px_230px] lg:items-center">
-            <div>名称 / 类型</div>
+            <div>Name / Type</div>
             <div>Base URL</div>
-            <div>模型</div>
-            <div>路由参数</div>
-            <div>状态</div>
-            <div>操作</div>
+            <div>Model</div>
+            <div>Routing</div>
+            <div>Status</div>
+            <div>Actions</div>
           </div>
           {isLoading ? (
             <div className="flex h-40 items-center justify-center">
@@ -452,19 +452,19 @@ function ChannelsContent() {
                     <div className="font-medium text-stone-900">{channel.name}</div>
                     <div className="text-xs text-stone-400">{channelTypeLabel(channel)}</div>
                   </div>
-                  <div className="truncate text-stone-600" title={channel.base_url || "内置账号池"}>
-                    {channel.base_url || "内置账号池"}
+                  <div className="truncate text-stone-600" title={channel.base_url || "Built-in Account Pool"}>
+                    {channel.base_url || "Built-in Account Pool"}
                   </div>
                   <div className="truncate text-stone-500" title={channel.models?.join(", ")}>
                     {channel.models?.join(", ")}
                   </div>
                   <div className="flex flex-wrap gap-1.5 text-xs text-stone-500">
-                    <Badge variant="outline">权重 {channel.weight}</Badge>
-                    <Badge variant="outline">优先级 {channel.priority}</Badge>
-                    <Badge variant="outline">{channel.timeout ? `${channel.timeout}s` : "无超时"}</Badge>
+                    <Badge variant="outline">Weight {channel.weight}</Badge>
+                    <Badge variant="outline">Priority {channel.priority}</Badge>
+                    <Badge variant="outline">{channel.timeout ? `${channel.timeout}s` : "No timeout"}</Badge>
                   </div>
                   <Badge variant={channel.enabled ? "success" : "secondary"} className="w-fit">
-                    {channel.enabled ? "启用" : "禁用"}
+                    {channel.enabled ? "Enable" : "Disable"}
                   </Badge>
                   <div className="min-w-0 space-y-2">
                     <div className="flex items-center gap-2">
@@ -472,8 +472,8 @@ function ChannelsContent() {
                         variant="outline"
                         size="icon"
                         className="size-8 rounded-lg border-rose-100 bg-white"
-                        title="编辑"
-                        aria-label="编辑渠道"
+                        title="Edit"
+                        aria-label="EditChannel"
                         onClick={() => openEditDialog(channel)}
                       >
                         <Pencil className="size-4" />
@@ -486,7 +486,7 @@ function ChannelsContent() {
                         onClick={() => openModelTestDialog(channel)}
                       >
                         {testingChannelId === channel.id ? <LoaderCircle className="size-4 animate-spin" /> : <TestTube className="size-4" />}
-                        测试
+                        Test
                       </Button>
                       <Button
                         variant="outline"
@@ -496,15 +496,15 @@ function ChannelsContent() {
                         onClick={() => void handleToggle(channel)}
                       >
                         {savingChannelId === channel.id ? <LoaderCircle className="size-4 animate-spin" /> : null}
-                        {channel.enabled ? "禁用" : "启用"}
+                        {channel.enabled ? "Disable" : "Enable"}
                       </Button>
                       {channel.id !== "internal_pool" ? (
                         <Button
                           variant="ghost"
                           size="icon"
                           className="size-8 text-rose-500"
-                          title="删除"
-                          aria-label="删除渠道"
+                          title="Delete"
+                          aria-label="DeleteChannel"
                           disabled={savingChannelId === channel.id}
                           onClick={() => void handleDelete(channel)}
                         >
@@ -524,10 +524,10 @@ function ChannelsContent() {
                         {testResult.ok ? <CheckCircle2 className="size-3.5 shrink-0" /> : <XCircle className="size-3.5 shrink-0" />}
                         <span className="truncate">
                           {testResult.ok
-                            ? `${testResult.tested_models.length} 个选中模型可用 · ${testResult.latency_ms}ms`
+                            ? `${testResult.tested_models.length} selected models available - ${testResult.latency_ms}ms`
                             : testResult.missing_models.length > 0
-                              ? `缺失 ${testResult.missing_models.join(", ")}`
-                              : testResult.error || "模型测试失败"}
+                              ? `Missing ${testResult.missing_models.join(", ")}`
+                              : testResult.error || "ModelTestFailed"}
                         </span>
                       </div>
                     ) : null}
@@ -542,15 +542,15 @@ function ChannelsContent() {
       <Dialog open={Boolean(modelTestChannel)} onOpenChange={(open) => (!open ? setModelTestChannel(null) : null)}>
         <DialogContent showCloseButton={false} className="flex max-h-[86vh] w-[min(94vw,680px)] max-w-none flex-col overflow-hidden rounded-lg p-0">
           <DialogHeader className="border-b border-rose-100 px-5 pt-5 pb-4 sm:px-6">
-            <DialogTitle>选择测试模型</DialogTitle>
+            <DialogTitle>Select Test Models</DialogTitle>
             <DialogDescription className="leading-6 text-stone-500">
-              {modelTestChannel ? `${modelTestChannel.name} · ${channelTypeLabel(modelTestChannel)}` : "选择要测试的模型"}
+              {modelTestChannel ? `${modelTestChannel.name} - ${channelTypeLabel(modelTestChannel)}` : "Select models to test"}
             </DialogDescription>
           </DialogHeader>
 
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5 sm:px-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="text-sm font-medium text-stone-800">已选 {selectedTestModels.length} / {candidateTestModels.length}</div>
+              <div className="text-sm font-medium text-stone-800">Selected {selectedTestModels.length} / {candidateTestModels.length}</div>
               <div className="flex gap-2">
                 <Button
                   type="button"
@@ -559,7 +559,7 @@ function ChannelsContent() {
                   className="h-8 rounded-lg border-rose-100 bg-white"
                   onClick={() => setSelectedTestModels(candidateTestModels)}
                 >
-                  全选
+                  Select All
                 </Button>
                 <Button
                   type="button"
@@ -568,7 +568,7 @@ function ChannelsContent() {
                   className="h-8 rounded-lg border-rose-100 bg-white"
                   onClick={() => setSelectedTestModels([])}
                 >
-                  清空
+                  Clear
                 </Button>
               </div>
             </div>
@@ -587,14 +587,14 @@ function ChannelsContent() {
               </div>
             ) : (
               <div className="rounded-lg border border-rose-100 bg-white/70 p-4 text-sm text-stone-500">
-                该渠道还没有配置可勾选的模型。
+                This channel has no selectable models configured yet.
               </div>
             )}
           </div>
 
           <DialogFooter className="border-t border-rose-100 px-5 py-4 sm:px-6">
             <Button variant="outline" className="h-10 rounded-xl border-rose-100 bg-white" onClick={() => setModelTestChannel(null)}>
-              取消
+              Cancel
             </Button>
             <Button
               className="h-10 rounded-xl bg-rose-500 text-white hover:bg-rose-600"
@@ -602,7 +602,7 @@ function ChannelsContent() {
               onClick={() => void handleTestModels()}
             >
               {modelTestChannel && testingChannelId === modelTestChannel.id ? <LoaderCircle className="size-4 animate-spin" /> : <TestTube className="size-4" />}
-              开始测试
+              Start Test
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -611,9 +611,9 @@ function ChannelsContent() {
       <Dialog open={Boolean(editingChannel)} onOpenChange={(open) => (!open ? setEditingChannel(null) : null)}>
         <DialogContent showCloseButton={false} className="flex max-h-[88vh] w-[min(94vw,760px)] max-w-none flex-col overflow-hidden rounded-lg p-0">
           <DialogHeader className="border-b border-rose-100 px-5 pt-5 pb-4 sm:px-6">
-            <DialogTitle>{isEditingInternal ? "配置内置账号池" : "编辑渠道配置"}</DialogTitle>
+            <DialogTitle>{isEditingInternal ? "Configure Built-in Account Pool" : "Edit Channel Configuration"}</DialogTitle>
             <DialogDescription className="leading-6 text-stone-500">
-              {isEditingInternal ? "内置账号池仅控制是否允许回落调用本地账号。" : "修改渠道名称、地址、模型范围和路由参数。"}
+              {isEditingInternal ? "The built-in account pool only controls whether fallback to local accounts is allowed." : "Change the channel name, URL, model scope, and routing parameters."}
             </DialogDescription>
           </DialogHeader>
 
@@ -623,12 +623,12 @@ function ChannelsContent() {
                 checked={editForm.enabled}
                 onCheckedChange={(checked) => setEditForm((current) => ({ ...current, enabled: checked === true }))}
               />
-              <span className="font-medium text-stone-800">启用该渠道</span>
+              <span className="font-medium text-stone-800">Enable this channel</span>
             </label>
 
             {isEditingInternal ? (
               <div className="space-y-2 rounded-lg border border-rose-100 bg-white/70 p-4 text-sm">
-                <div className="font-semibold text-stone-800">内置模型</div>
+                <div className="font-semibold text-stone-800">Built-in Models</div>
                 <div className="leading-6 text-stone-500">{editForm.models}</div>
               </div>
             ) : (
@@ -661,7 +661,7 @@ function ChannelsContent() {
 
           <DialogFooter className="border-t border-rose-100 px-5 py-4 sm:px-6">
             <Button variant="outline" className="h-10 rounded-xl border-rose-100 bg-white" onClick={() => setEditingChannel(null)}>
-              取消
+              Cancel
             </Button>
             <Button
               className="h-10 rounded-xl bg-rose-500 text-white hover:bg-rose-600"
@@ -669,7 +669,7 @@ function ChannelsContent() {
               onClick={() => void handleSaveEdit()}
             >
               {editingChannel && savingChannelId === editingChannel.id ? <LoaderCircle className="size-4 animate-spin" /> : null}
-              保存
+              Save
             </Button>
           </DialogFooter>
         </DialogContent>

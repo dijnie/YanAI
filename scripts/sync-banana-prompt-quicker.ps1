@@ -327,7 +327,7 @@ function New-MissingAssetPlaceholder {
   $safeTitle = [System.Security.SecurityElement]::Escape($Title)
   $safeUrl = [System.Security.SecurityElement]::Escape($UrlValue)
   $svg = @"
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" role="img" aria-label="示例图暂未离线保存">
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" role="img" aria-label="Sample image not yet saved offline">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#f8fafc"/>
@@ -338,9 +338,9 @@ function New-MissingAssetPlaceholder {
   <rect x="120" y="120" width="960" height="660" rx="28" fill="#ffffff" stroke="#d6d3d1" stroke-width="3"/>
   <circle cx="600" cy="334" r="92" fill="#f5f5f4" stroke="#d6d3d1" stroke-width="3"/>
   <path d="M552 348l35 35 68-86" fill="none" stroke="#78716c" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
-  <text x="600" y="500" text-anchor="middle" font-family="Arial, 'Microsoft YaHei', sans-serif" font-size="42" font-weight="700" fill="#292524">示例图暂未离线保存</text>
+  <text x="600" y="500" text-anchor="middle" font-family="Arial, 'Microsoft YaHei', sans-serif" font-size="42" font-weight="700" fill="#292524">Sample image not yet saved offline</text>
   <text x="600" y="566" text-anchor="middle" font-family="Arial, 'Microsoft YaHei', sans-serif" font-size="28" fill="#57534e">$safeTitle</text>
-  <text x="600" y="636" text-anchor="middle" font-family="Arial, 'Microsoft YaHei', sans-serif" font-size="20" fill="#78716c">源站拒绝或超时，已保留原始地址用于后续同步</text>
+  <text x="600" y="636" text-anchor="middle" font-family="Arial, 'Microsoft YaHei', sans-serif" font-size="20" fill="#78716c">Source site refused or timed out; the original URL has been kept for a future sync</text>
   <text x="600" y="690" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#a8a29e">$safeUrl</text>
 </svg>
 "@

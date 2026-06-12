@@ -75,7 +75,7 @@ class FakeChannelService:
         self.calls.append(dict(payload))
         if self.generation_result is not None:
             return self.generation_result
-        error = "个人渠道/Mine: 连接被上游重置（curl 35）。请检查个人渠道 Base URL 是否正确、API Key 是否有效、该渠道是否允许当前网络访问；如果系统设置里配置了代理，也请确认代理可用。"
+        error = "Personal Channel/Mine: Connection reset by upstream (curl 35). Check Personal Channel Base URL is correct, the API key is valid, and the channel allows access from the current network. If a proxy is configured in system settings, verify that the proxy is available."
         payload["_personal_channel_error"] = error
         payload["_channel_error"] = error
         return None
@@ -84,7 +84,7 @@ class FakeChannelService:
         self.edit_calls.append(dict(payload))
         if self.edit_result is not None:
             return self.edit_result
-        error = "个人渠道/Mine: 连接被上游重置（curl 35）。请检查个人渠道 Base URL 是否正确、API Key 是否有效、该渠道是否允许当前网络访问；如果系统设置里配置了代理，也请确认代理可用。"
+        error = "Personal Channel/Mine: Connection reset by upstream (curl 35). Check Personal Channel Base URL is correct, the API key is valid, and the channel allows access from the current network. If a proxy is configured in system settings, verify that the proxy is available."
         payload["_personal_channel_error"] = error
         payload["_channel_error"] = error
         return None
@@ -139,7 +139,7 @@ class PersonalImageChannelApiTests(unittest.TestCase):
         channels = FakeChannelService()
         channels.generation_result = (
             {"created": 1, "data": [{"url": "https://personal.example/image.png"}]},
-            "个人渠道/Mine",
+            "Personal Channel/Mine",
         )
         record_calls: list[dict[str, object]] = []
 
@@ -169,7 +169,7 @@ class PersonalImageChannelApiTests(unittest.TestCase):
         self.assertEqual(auth.reserved, [])
         self.assertEqual(auth.released, [])
         self.assertEqual(len(channels.calls), 1)
-        self.assertEqual(record_calls[0]["channel"], "个人渠道/Mine")
+        self.assertEqual(record_calls[0]["channel"], "Personal Channel/Mine")
         self.assertEqual(record_calls[0]["quota_cost"], 0)
 
     def test_enabled_personal_edit_channel_with_zero_local_quota_skips_reservation(self) -> None:
@@ -180,7 +180,7 @@ class PersonalImageChannelApiTests(unittest.TestCase):
         channels = FakeChannelService()
         channels.edit_result = (
             {"created": 1, "data": [{"url": "https://personal.example/edit.png"}]},
-            "个人渠道/Mine",
+            "Personal Channel/Mine",
         )
         record_calls: list[dict[str, object]] = []
 
@@ -211,7 +211,7 @@ class PersonalImageChannelApiTests(unittest.TestCase):
         self.assertEqual(auth.reserved, [])
         self.assertEqual(auth.released, [])
         self.assertEqual(len(channels.edit_calls), 1)
-        self.assertEqual(record_calls[0]["channel"], "个人渠道/Mine")
+        self.assertEqual(record_calls[0]["channel"], "Personal Channel/Mine")
         self.assertEqual(record_calls[0]["quota_cost"], 0)
 
 

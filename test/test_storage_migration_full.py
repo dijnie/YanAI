@@ -16,7 +16,7 @@ class FullStorageMigrationTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)
             db_path = root / "target.db"
-            self._write_json(root / "accounts.json", [{"access_token": "token-a", "status": "正常", "quota": 2}])
+            self._write_json(root / "accounts.json", [{"access_token": "token-a", "status": "Active", "quota": 2}])
             self._write_json(root / "auth_keys.json", {"items": [{"id": "key-a", "key_hash": "hash-a", "role": "admin", "enabled": True}]})
             self._write_json(root / "users.json", [{"id": "user-a", "email": "a@example.com", "role": "user", "status": "active"}])
             self._write_json(root / "sessions.json", [{"id": "session-a", "token_hash": "hash-session", "user_id": "user-a"}])

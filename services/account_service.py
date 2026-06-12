@@ -32,6 +32,16 @@ class AccountLease:
 
 
 class AccountService:
+    # Legacy compatibility: older versions persisted Chinese status values in user data.
+    # This map is applied when accounts are normalized/loaded from storage so old
+    # stored statuses are converted on read. It is the only place Chinese may remain.
+    _LEGACY_STATUS_MAP = {
+        "\u6b63\u5e38": "Normal",
+        "\u9650\u6d41": "Rate Limited",
+        "\u5f02\u5e38": "Error",
+        "\u7981\u7528": "Disabled",
+    }
+
     ACCOUNT_TYPE_MAP = {
         "free": "Free",
         "plus": "Plus",
@@ -106,11 +116,11 @@ class AccountService:
         message = str(exc) or exc.__class__.__name__
         normalized = message.lower()
         if "curl: (28)" in normalized or "timed out" in normalized or "timeout" in normalized:
-            return "连接 chatgpt.com 超时：请在系统设置 > 全局代理中配置可用代理，保存并测试通过后重试刷新"
+            return "Connection to chatgpt.com timed out: configure a working proxy in System Settings > Global Proxy, save and test it, then retry the refresh"
         if "could not resolve" in normalized or "name resolution" in normalized or "failed to resolve" in normalized:
-            return "无法解析 chatgpt.com：请检查网络 DNS 或全局代理配置"
+            return "Unable to resolve chatgpt.com: check your network DNS or global proxy configuration"
         if "proxy" in normalized and ("connect" in normalized or "failed" in normalized or "refused" in normalized):
-            return "代理连接失败：请检查系统设置 > 全局代理地址、端口和认证信息"
+            return "Proxy connection failed: check the address, port, and credentials in System Settings > Global Proxy"
         return message
 
     def _clean_tokens(self, tokens: list[str]) -> list[str]:
@@ -134,7 +144,7 @@ class AccountService:
         if not isinstance(account, dict):
             return False
         status = str(account.get("status") or "").strip()
-        if status in {"禁用", "限流", "异常"}:
+        if status in {"Disabled", "Rate Limited", "Error"}:
             return False
         if bool(account.get("image_quota_unknown")):
             return True
@@ -180,7 +190,7 @@ class AccountService:
         token_payload = self._decode_access_token_payload(access_token)
 
         auth_payload = token_payload.get("https://api.openai.com/auth")
-        print("检测账户类型响应", auth_payload)
+        print("Account type detection response", auth_payload)
         if isinstance(auth_payload, dict):
             matched = self._normalize_account_type(auth_payload.get("chatgpt_plan_type"))
             if matched:
@@ -202,7 +212,8 @@ class AccountService:
         normalized = dict(item)
         normalized["access_token"] = access_token
         normalized["type"] = self._clean_token(normalized.get("type")) or "Free"
-        normalized["status"] = self._clean_token(normalized.get("status")) or "正常"
+        status = self._clean_token(normalized.get("status")) or "Normal"
+        normalized["status"] = self._LEGACY_STATUS_MAP.get(status, status)
         normalized["quota"] = int(normalized.get("quota") if normalized.get("quota") is not None else 0)
         if normalized["quota"] < 0:
             normalized["quota"] = 0
@@ -242,7 +253,7 @@ class AccountService:
         if not text:
             return {"present": False, "preview": "", "length": 0}
         if len(text) <= 12:
-            preview = f"{text[:3]}...{text[-2:]}" if len(text) > 5 else "已保存"
+            preview = f"{text[:3]}...{text[-2:]}" if len(text) > 5 else "Saved"
         else:
             preview = f"{text[:8]}...{text[-6:]}"
         return {"present": True, "preview": preview, "length": len(text)}
@@ -331,20 +342,20 @@ class AccountService:
             if not image_quota_unknown:
                 next_item["quota"] = max(0, int(next_item.get("quota") or 0) - 1)
             if not image_quota_unknown and next_item["quota"] == 0:
-                next_item["status"] = "限流"
+                next_item["status"] = "Rate Limited"
                 next_item["restore_at"] = next_item.get("restore_at") or None
-            elif next_item.get("status") == "限流":
-                next_item["status"] = "正常"
+            elif next_item.get("status") == "Rate Limited":
+                next_item["status"] = "Normal"
         else:
             next_item["fail"] = int(next_item.get("fail") or 0) + 1
         next_item["updated_at"] = self._format_timestamp(self._now_utc())
         return next_item
 
     def _remove_rate_limited_account_if_configured(self, access_token: str, account: dict | None) -> dict | None:
-        if not account or account.get("status") != "限流" or not config.auto_remove_rate_limited_accounts:
+        if not account or account.get("status") != "Rate Limited" or not config.auto_remove_rate_limited_accounts:
             return account
         self.remove_token(access_token)
-        log_service.add(LOG_TYPE_ACCOUNT, "自动移除限流账号", {"token": anonymize_token(access_token)})
+        log_service.add(LOG_TYPE_ACCOUNT, "Automatically removed rate-limited account", {"token": anonymize_token(access_token)})
         return None
 
     def _build_remote_headers(self, access_token: str) -> tuple[dict[str, str], str]:
@@ -384,7 +395,7 @@ class AccountService:
                 "id": hashlib.sha1(access_token.encode("utf-8")).hexdigest()[:16],
                 "access_token": access_token,
                 "type": account.get("type") or "Free",
-                "status": account.get("status") or "正常",
+                "status": account.get("status") or "Normal",
                 "quota": account.get("quota") if account.get("quota") is not None else 0,
                 "imageQuotaUnknown": bool(account.get("image_quota_unknown")),
                 "email": account.get("email"),
@@ -441,7 +452,7 @@ class AccountService:
                 return self.update_account(
                     access_token,
                     {
-                        "status": "异常",
+                        "status": "Error",
                         "quota": 0,
                     },
                 )
@@ -579,10 +590,10 @@ class AccountService:
             normalized = self._normalize_account(account)
             if normalized is None:
                 return None
-            if normalized.get("status") == "限流" and config.auto_remove_rate_limited_accounts:
+            if normalized.get("status") == "Rate Limited" and config.auto_remove_rate_limited_accounts:
                 del self._accounts[index]
                 self._save_accounts()
-                log_service.add(LOG_TYPE_ACCOUNT, "自动移除限流账号", {"token": anonymize_token(access_token)})
+                log_service.add(LOG_TYPE_ACCOUNT, "Automatically removed rate-limited account", {"token": anonymize_token(access_token)})
                 return None
             self._accounts[index] = normalized
             self._save_accounts()
@@ -591,7 +602,7 @@ class AccountService:
     def get_text_access_token(self) -> str:
         for account in self._list_current_accounts():
             status = self._clean_token(account.get("status"))
-            if status not in {"禁用", "异常"}:
+            if status not in {"Disabled", "Error"}:
                 return self._clean_token(account.get("access_token"))
         return ""
 
@@ -600,7 +611,7 @@ class AccountService:
             return False
         removed = self.remove_token(access_token)
         if removed:
-            log_service.add(LOG_TYPE_ACCOUNT, "自动移除异常账号", {"source": event, "token": anonymize_token(access_token)})
+            log_service.add(LOG_TYPE_ACCOUNT, "Automatically removed invalid account", {"source": event, "token": anonymize_token(access_token)})
         return removed
 
     def next_token(self) -> str:
@@ -639,7 +650,7 @@ class AccountService:
         return [
             token
             for item in self._list_current_accounts()
-            if item.get("status") == "限流"
+            if item.get("status") == "Rate Limited"
                and (token := self._clean_token(item.get("access_token")))
         ]
 
@@ -668,7 +679,7 @@ class AccountService:
                 )
                 if account is not None:
                     repo.upsert(account)
-            log_service.add(LOG_TYPE_ACCOUNT, f"新增 {added} 个账号，跳过 {skipped} 个", {"added": added, "skipped": skipped})
+            log_service.add(LOG_TYPE_ACCOUNT, f"Added {added} accounts, skipped {skipped}", {"added": added, "skipped": skipped})
             return {"added": added, "skipped": skipped, "items": self.list_accounts()}
 
         with self._lock:
@@ -694,7 +705,7 @@ class AccountService:
             self._accounts = list(indexed.values())
             self._save_accounts()
             items = self._public_items(self._accounts)
-            log_service.add(LOG_TYPE_ACCOUNT, f"新增 {added} 个账号，跳过 {skipped} 个", {"added": added, "skipped": skipped})
+            log_service.add(LOG_TYPE_ACCOUNT, f"Added {added} accounts, skipped {skipped}", {"added": added, "skipped": skipped})
         return {"added": added, "skipped": skipped, "items": items}
 
     def add_account_items(self, accounts: list[dict]) -> dict:
@@ -734,7 +745,7 @@ class AccountService:
                 )
                 if account is not None:
                     repo.upsert(account)
-            log_service.add(LOG_TYPE_ACCOUNT, f"新增 {added} 个账号元数据，跳过 {skipped} 个", {"added": added, "skipped": skipped})
+            log_service.add(LOG_TYPE_ACCOUNT, f"Added {added} account metadata entries, skipped {skipped}", {"added": added, "skipped": skipped})
             return {"added": added, "skipped": skipped, "items": self.list_accounts()}
 
         with self._lock:
@@ -762,7 +773,7 @@ class AccountService:
             self._accounts = list(indexed.values())
             self._save_accounts()
             items = self._public_items(self._accounts)
-            log_service.add(LOG_TYPE_ACCOUNT, f"新增 {added} 个账号元数据，跳过 {skipped} 个", {"added": added, "skipped": skipped})
+            log_service.add(LOG_TYPE_ACCOUNT, f"Added {added} account metadata entries, skipped {skipped}", {"added": added, "skipped": skipped})
         return {"added": added, "skipped": skipped, "items": items}
 
     def delete_accounts(self, tokens: list[str]) -> dict:
@@ -773,7 +784,7 @@ class AccountService:
         if repo is not None:
             removed = sum(1 for token in target_set if repo.delete(token))
             if removed:
-                log_service.add(LOG_TYPE_ACCOUNT, f"删除 {removed} 个账号", {"removed": removed})
+                log_service.add(LOG_TYPE_ACCOUNT, f"Deleted {removed} accounts", {"removed": removed})
             return {"removed": removed, "items": self.list_accounts()}
         with self._lock:
             before = len(self._accounts)
@@ -786,7 +797,7 @@ class AccountService:
                 self._index = 0
             if removed:
                 self._save_accounts()
-                log_service.add(LOG_TYPE_ACCOUNT, f"删除 {removed} 个账号", {"removed": removed})
+                log_service.add(LOG_TYPE_ACCOUNT, f"Deleted {removed} accounts", {"removed": removed})
             items = self._public_items(self._accounts)
         return {"removed": removed, "items": items}
 
@@ -805,12 +816,12 @@ class AccountService:
             account = self._normalize_account({**current, **updates, "access_token": access_token})
             if account is None:
                 return None
-            if account.get("status") == "限流" and config.auto_remove_rate_limited_accounts:
+            if account.get("status") == "Rate Limited" and config.auto_remove_rate_limited_accounts:
                 repo.delete(access_token)
-                log_service.add(LOG_TYPE_ACCOUNT, "自动移除限流账号", {"token": anonymize_token(access_token)})
+                log_service.add(LOG_TYPE_ACCOUNT, "Automatically removed rate-limited account", {"token": anonymize_token(access_token)})
                 return None
             repo.upsert(account)
-            log_service.add(LOG_TYPE_ACCOUNT, "更新账号", {"token": anonymize_token(access_token), "status": account.get("status")})
+            log_service.add(LOG_TYPE_ACCOUNT, "Updated account", {"token": anonymize_token(access_token), "status": account.get("status")})
             return dict(account)
         with self._lock:
             index = self._find_account_index(access_token)
@@ -819,14 +830,14 @@ class AccountService:
             account = self._normalize_account({**self._accounts[index], **updates, "access_token": access_token})
             if account is None:
                 return None
-            if account.get("status") == "限流" and config.auto_remove_rate_limited_accounts:
+            if account.get("status") == "Rate Limited" and config.auto_remove_rate_limited_accounts:
                 del self._accounts[index]
                 self._save_accounts()
-                log_service.add(LOG_TYPE_ACCOUNT, "自动移除限流账号", {"token": anonymize_token(access_token)})
+                log_service.add(LOG_TYPE_ACCOUNT, "Automatically removed rate-limited account", {"token": anonymize_token(access_token)})
                 return None
             self._accounts[index] = account
             self._save_accounts()
-            log_service.add(LOG_TYPE_ACCOUNT, "更新账号", {"token": anonymize_token(access_token), "status": account.get("status")})
+            log_service.add(LOG_TYPE_ACCOUNT, "Updated account", {"token": anonymize_token(access_token), "status": account.get("status")})
             return dict(account)
         return None
 
@@ -849,10 +860,10 @@ class AccountService:
             account = self._normalize_account(next_item)
             if account is None:
                 return None
-            if account.get("status") == "限流" and config.auto_remove_rate_limited_accounts:
+            if account.get("status") == "Rate Limited" and config.auto_remove_rate_limited_accounts:
                 del self._accounts[index]
                 self._save_accounts()
-                log_service.add(LOG_TYPE_ACCOUNT, "自动移除限流账号", {"token": anonymize_token(access_token)})
+                log_service.add(LOG_TYPE_ACCOUNT, "Automatically removed rate-limited account", {"token": anonymize_token(access_token)})
                 return None
             self._accounts[index] = account
             self._save_accounts()
@@ -909,7 +920,7 @@ class AccountService:
 
             account_type = self._detect_account_type(access_token, me_payload, init_payload)
             quota, restore_at, image_quota_unknown = self._extract_quota_and_restore_at(limits_progress)
-            status = "正常" if image_quota_unknown and account_type != "Free" else ("限流" if quota == 0 else "正常")
+            status = "Normal" if image_quota_unknown and account_type != "Free" else ("Rate Limited" if quota == 0 else "Normal")
 
             result = {
                 "email": me_payload.get("email"),
@@ -956,8 +967,8 @@ class AccountService:
                     print(f"[account-refresh] fail {anonymize_token(access_token)} {message}")
                     if "/backend-api/me failed: HTTP 401" in raw_message:
                         if not self.remove_invalid_token(access_token, "refresh_accounts"):
-                            self.update_account(access_token, {"status": "异常", "quota": 0})
-                        message = "检测到封号"
+                            self.update_account(access_token, {"status": "Error", "quota": 0})
+                        message = "Account ban detected"
                     errors.append({"access_token": access_token, "error": message})
 
         print(f"[account-refresh] done refreshed={refreshed} errors={len(errors)} workers={max_workers}")

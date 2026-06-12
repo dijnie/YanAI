@@ -177,7 +177,7 @@ class ModelServiceTest(unittest.TestCase):
 
             self.assertIsNotNone(result)
             self.assertFalse(result["ok"])
-            self.assertIn("渠道模型列表接口不可用", result["error"])
+            self.assertIn("Channel model list endpoint unavailable", result["error"])
             self.assertIn("GET /v1/models", result["error"])
             self.assertIn("HTTP 405", result["error"])
 
@@ -296,7 +296,7 @@ class ModelServiceTest(unittest.TestCase):
 
             self.assertIsNotNone(routed)
             self.assertEqual(calls, ["personal_image_channel:user-a"])
-            self.assertEqual(routed[1], "个人渠道/Mine")
+            self.assertEqual(routed[1], "Personal Channel/Mine")
 
     def test_personal_generation_channel_does_not_fall_back_to_global_channel(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -340,7 +340,7 @@ class ModelServiceTest(unittest.TestCase):
 
             self.assertIsNone(routed)
             self.assertEqual(calls, ["personal_image_channel:user-a"])
-            self.assertIn("个人渠道/Mine: 连接被上游重置", payload["_personal_channel_error"])
+            self.assertIn("Personal Channel/Mine: Connection reset by upstream", payload["_personal_channel_error"])
 
     def test_external_generation_channel_normalizes_aspect_ratio_for_upstream(self) -> None:
         class FakeResponse:
@@ -387,7 +387,7 @@ class ModelServiceTest(unittest.TestCase):
         self.assertEqual(calls["url"], "https://a.example/v1/images/generations")
         body = calls["kwargs"]["json"]
         self.assertEqual(body["size"], "1024x1536")
-        self.assertEqual(body["prompt"], "draw\n\n输出为 9:16 竖屏构图，适合竖版画幅展示。")
+        self.assertEqual(body["prompt"], "draw\n\nOutput as a 9:16 vertical composition suitable for portrait display.")
 
     def test_personal_edit_channel_does_not_fall_back_to_global_channel(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -431,7 +431,7 @@ class ModelServiceTest(unittest.TestCase):
 
             self.assertIsNone(routed)
             self.assertEqual(calls, ["personal_image_channel:user-a"])
-            self.assertIn("个人渠道/Mine: 连接被上游重置", payload["_personal_channel_error"])
+            self.assertIn("Personal Channel/Mine: Connection reset by upstream", payload["_personal_channel_error"])
 
     def test_external_edit_channel_uses_curl_mime_multipart(self) -> None:
         class FakeResponse:
@@ -569,7 +569,7 @@ class ModelServiceTest(unittest.TestCase):
         self.assertEqual(calls["url"], "https://a.example/v1/images/edits")
         parts = mime_instances[0].parts
         self.assertIn(
-            {"name": "prompt", "data": "draw\n\n输出为 9:16 竖屏构图，适合竖版画幅展示。".encode("utf-8")},
+            {"name": "prompt", "data": "draw\n\nOutput as a 9:16 vertical composition suitable for portrait display.".encode("utf-8")},
             parts,
         )
         self.assertIn({"name": "size", "data": b"1024x1536"}, parts)

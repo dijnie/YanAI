@@ -43,8 +43,8 @@ function RedeemCodesContent() {
   const deleteCount = deleteTarget?.length ?? 0;
   const deleteDescription =
     deleteCount === 1
-      ? `确认删除兑换码「${deleteTarget?.[0]?.code}」吗？删除后无法再使用。`
-      : `确认删除选中的 ${deleteCount} 个兑换码吗？删除后无法再使用。`;
+      ? `Delete redeem code "${deleteTarget?.[0]?.code}"? It can no longer be used after deletion.`
+      : `Delete the ${deleteCount} selected redeem codes? They can no longer be used after deletion.`;
 
   const load = async () => {
     setIsLoading(true);
@@ -53,7 +53,7 @@ function RedeemCodesContent() {
       setItems(data.items);
       setSelectedIds((current) => current.filter((id) => data.items.some((item) => item.id === id)));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "加载兑换码失败");
+      toast.error(error instanceof Error ? error.message : "Failed to load redeem codes");
     } finally {
       setIsLoading(false);
     }
@@ -75,9 +75,9 @@ function RedeemCodesContent() {
       setItems(data.items);
       setSelectedIds((current) => current.filter((id) => data.items.some((item) => item.id === id)));
       await navigator.clipboard.writeText(data.created.map((item) => item.code).join("\n"));
-      toast.success(`已生成 ${data.created.length} 个兑换码，并复制到剪贴板`);
+      toast.success(`Generated ${data.created.length} redeem codes and copied them to the clipboard`);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "生成兑换码失败");
+      toast.error(error instanceof Error ? error.message : "Failed to generate redeem codes");
     }
   };
 
@@ -87,7 +87,7 @@ function RedeemCodesContent() {
       setItems(data.items);
       setSelectedIds((current) => current.filter((id) => data.items.some((row) => row.id === id)));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "更新兑换码失败");
+      toast.error(error instanceof Error ? error.message : "Failed to update redeem code");
     }
   };
 
@@ -101,7 +101,7 @@ function RedeemCodesContent() {
 
   const openDeleteCodes = (codes: RedeemCode[]) => {
     if (codes.length === 0) {
-      toast.error("请先选择要删除的兑换码");
+      toast.error("Select the redeem codes to delete first");
       return;
     }
     setDeleteTarget(codes);
@@ -109,11 +109,11 @@ function RedeemCodesContent() {
 
   const handleExportCodes = () => {
     if (selectedCodes.length === 0) {
-      toast.error("请先选择要导出的兑换码");
+      toast.error("Select the redeem codes to export first");
       return;
     }
     downloadRedeemCodes(selectedCodes);
-    toast.success(`已导出 ${selectedCodes.length} 个兑换码`);
+    toast.success(`Exported ${selectedCodes.length} redeem codes`);
   };
 
   const handleDeleteCodes = async () => {
@@ -124,9 +124,9 @@ function RedeemCodesContent() {
       setItems(data.items);
       setSelectedIds((current) => current.filter((id) => data.items.some((item) => item.id === id)));
       setDeleteTarget(null);
-      toast.success(`已删除 ${data.removed} 个兑换码`);
+      toast.success(`Deleted ${data.removed} redeem codes`);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "删除兑换码失败");
+      toast.error(error instanceof Error ? error.message : "Failed to delete redeem codes");
     } finally {
       setIsDeleting(false);
     }
@@ -137,11 +137,11 @@ function RedeemCodesContent() {
       <div className="flex items-end justify-between gap-4">
         <div className="space-y-1">
           <div className="text-xs font-semibold tracking-[0.18em] text-rose-400 uppercase">Redeem</div>
-          <h1 className="text-2xl font-semibold tracking-tight">兑换码管理</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Redeem Codes</h1>
         </div>
         <Button variant="outline" className="h-10 rounded-xl border-rose-100 bg-white" onClick={() => void load()}>
           <RefreshCw className="size-4" />
-          刷新
+          Refresh
         </Button>
       </div>
 
@@ -149,16 +149,16 @@ function RedeemCodesContent() {
         <CardContent className="space-y-4 p-5">
           <div className="flex items-center gap-2 text-sm font-semibold text-stone-800">
             <Plus className="size-4 text-rose-500" />
-            批量生成兑换码
+            Batch Generate Redeem Codes
           </div>
           <div className="grid gap-3 md:grid-cols-[120px_120px_120px_180px_1fr_auto]">
-            <Input type="number" value={form.quota} onChange={(event) => setForm((current) => ({ ...current, quota: event.target.value }))} placeholder="额度" className="h-10 rounded-xl border-rose-100 bg-white" />
-            <Input type="number" value={form.count} onChange={(event) => setForm((current) => ({ ...current, count: event.target.value }))} placeholder="数量" className="h-10 rounded-xl border-rose-100 bg-white" />
-            <Input type="number" value={form.max_uses} onChange={(event) => setForm((current) => ({ ...current, max_uses: event.target.value }))} placeholder="次数" className="h-10 rounded-xl border-rose-100 bg-white" />
-            <Input value={form.expires_at} onChange={(event) => setForm((current) => ({ ...current, expires_at: event.target.value }))} placeholder="过期时间，可空" className="h-10 rounded-xl border-rose-100 bg-white" />
-            <Input value={form.note} onChange={(event) => setForm((current) => ({ ...current, note: event.target.value }))} placeholder="备注" className="h-10 rounded-xl border-rose-100 bg-white" />
+            <Input type="number" value={form.quota} onChange={(event) => setForm((current) => ({ ...current, quota: event.target.value }))} placeholder="Quota" className="h-10 rounded-xl border-rose-100 bg-white" />
+            <Input type="number" value={form.count} onChange={(event) => setForm((current) => ({ ...current, count: event.target.value }))} placeholder="Count" className="h-10 rounded-xl border-rose-100 bg-white" />
+            <Input type="number" value={form.max_uses} onChange={(event) => setForm((current) => ({ ...current, max_uses: event.target.value }))} placeholder="Max uses" className="h-10 rounded-xl border-rose-100 bg-white" />
+            <Input value={form.expires_at} onChange={(event) => setForm((current) => ({ ...current, expires_at: event.target.value }))} placeholder="Expiry time (optional)" className="h-10 rounded-xl border-rose-100 bg-white" />
+            <Input value={form.note} onChange={(event) => setForm((current) => ({ ...current, note: event.target.value }))} placeholder="Note" className="h-10 rounded-xl border-rose-100 bg-white" />
             <Button className="h-10 rounded-xl bg-rose-500 text-white hover:bg-rose-600" onClick={() => void handleCreate()}>
-              生成
+              Generate
             </Button>
           </div>
         </CardContent>
@@ -171,9 +171,9 @@ function RedeemCodesContent() {
               <Checkbox
                 checked={allSelected}
                 onCheckedChange={(checked) => toggleSelectAll(Boolean(checked))}
-                aria-label="选择全部兑换码"
+                aria-label="Select all redeem codes"
               />
-              选择全部
+              Select all
             </label>
             <Button
               variant="ghost"
@@ -182,7 +182,7 @@ function RedeemCodesContent() {
               disabled={selectedCodes.length === 0}
             >
               <Download className="size-4" />
-              导出所选
+              Export selected
             </Button>
             <Button
               variant="ghost"
@@ -191,11 +191,11 @@ function RedeemCodesContent() {
               disabled={selectedCodes.length === 0 || isDeleting}
             >
               {isDeleting ? <LoaderCircle className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
-              删除所选
+              Delete selected
             </Button>
             {selectedCodes.length > 0 ? (
               <span className="rounded-lg bg-stone-100 px-2.5 py-1 text-xs font-medium text-stone-600">
-                已选择 {selectedCodes.length} 项
+                {selectedCodes.length} selected
               </span>
             ) : null}
           </div>
@@ -204,7 +204,7 @@ function RedeemCodesContent() {
               <LoaderCircle className="size-5 animate-spin text-rose-400" />
             </div>
           ) : items.length === 0 ? (
-            <div className="px-6 py-14 text-center text-sm text-stone-500">暂无兑换码</div>
+            <div className="px-6 py-14 text-center text-sm text-stone-500">No redeem codes yet</div>
           ) : (
             items.map((item) => (
               <div key={item.id} className="grid gap-3 border-b border-rose-50 px-5 py-4 text-sm last:border-0 lg:grid-cols-[44px_1.4fr_100px_100px_120px_160px_180px] lg:items-center">
@@ -217,7 +217,7 @@ function RedeemCodesContent() {
                         : current.filter((id) => id !== item.id),
                     );
                   }}
-                  aria-label={`选择兑换码 ${item.code}`}
+                  aria-label={`Select redeem code ${item.code}`}
                 />
                 <div className="flex min-w-0 items-center gap-3">
                   <div className="rounded-2xl bg-rose-50 p-3 text-rose-500">
@@ -225,16 +225,16 @@ function RedeemCodesContent() {
                   </div>
                   <div className="min-w-0">
                     <div className="truncate font-mono font-semibold text-stone-900">{item.code}</div>
-                    <div className="truncate text-xs text-stone-400">{item.note || "无备注"}</div>
+                    <div className="truncate text-xs text-stone-400">{item.note || "No note"}</div>
                   </div>
                 </div>
-                <div className="font-semibold text-rose-600">{item.quota} 点</div>
+                <div className="font-semibold text-rose-600">{item.quota} pts</div>
                 <div className="text-stone-600">{item.used_count}/{item.max_uses}</div>
-                <Badge variant={item.status === "enabled" ? "success" : "secondary"}>{item.status === "enabled" ? "启用" : "停用"}</Badge>
-                <div className="text-xs text-stone-500">{item.expires_at || "永不过期"}</div>
+                <Badge variant={item.status === "enabled" ? "success" : "secondary"}>{item.status === "enabled" ? "Enabled" : "Disabled"}</Badge>
+                <div className="text-xs text-stone-500">{item.expires_at || "Never expires"}</div>
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" className="h-8 rounded-lg border-rose-100 bg-white" onClick={() => void handleToggle(item)}>
-                    {item.status === "enabled" ? "停用" : "启用"}
+                    {item.status === "enabled" ? "Disable" : "Enable"}
                   </Button>
                   <Button
                     variant="ghost"
@@ -242,7 +242,7 @@ function RedeemCodesContent() {
                     className="size-8 text-stone-500"
                     onClick={() => {
                       void navigator.clipboard.writeText(item.code);
-                      toast.success("兑换码已复制");
+                      toast.success("Redeem code copied");
                     }}
                   >
                     <Copy className="size-4" />
@@ -260,16 +260,16 @@ function RedeemCodesContent() {
             <div className="mb-1 flex size-10 items-center justify-center rounded-full bg-rose-50 text-rose-500">
               <AlertTriangle className="size-5" />
             </div>
-            <DialogTitle>{deleteCount === 1 ? "删除兑换码" : "批量删除兑换码"}</DialogTitle>
+            <DialogTitle>{deleteCount === 1 ? "Delete Redeem Code" : "Delete Redeem Codes"}</DialogTitle>
             <DialogDescription>{deleteDescription}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" className="rounded-xl border-stone-200 bg-white" onClick={() => setDeleteTarget(null)} disabled={isDeleting}>
-              取消
+              Cancel
             </Button>
             <Button variant="destructive" className="rounded-xl" onClick={() => void handleDeleteCodes()} disabled={isDeleting}>
               {isDeleting ? <LoaderCircle className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
-              删除
+              Delete
             </Button>
           </DialogFooter>
         </DialogContent>

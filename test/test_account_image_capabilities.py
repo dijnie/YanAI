@@ -17,12 +17,12 @@ class AccountCapabilityTests(unittest.TestCase):
     def test_unknown_quota_accounts_are_available_only_when_not_throttled(self) -> None:
         self.assertFalse(
             AccountService._is_image_account_available(
-                {"status": "限流", "image_quota_unknown": True, "quota": 0}
+                {"status": "\u9650\u6d41", "image_quota_unknown": True, "quota": 0}
             )
         )
         self.assertTrue(
             AccountService._is_image_account_available(
-                {"status": "正常", "image_quota_unknown": True, "quota": 0}
+                {"status": "Active", "image_quota_unknown": True, "quota": 0}
             )
         )
 
@@ -53,7 +53,7 @@ class AccountCapabilityTests(unittest.TestCase):
             service.update_account(
                 "token-1",
                 {
-                    "status": "正常",
+                    "status": "Active",
                     "quota": 0,
                     "image_quota_unknown": True,
                 },
@@ -63,7 +63,7 @@ class AccountCapabilityTests(unittest.TestCase):
 
             self.assertIsNotNone(updated)
             self.assertEqual(updated["quota"], 0)
-            self.assertEqual(updated["status"], "正常")
+            self.assertEqual(updated["status"], "Active")
             self.assertTrue(updated["image_quota_unknown"])
 
     def test_public_items_include_masked_oauth_credentials_summary(self) -> None:

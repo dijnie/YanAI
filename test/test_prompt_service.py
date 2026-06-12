@@ -17,14 +17,14 @@ class PromptLibraryServiceTests(unittest.TestCase):
                     {
                         "prompts": [
                             {
-                                "title": "旧提示词",
-                                "description": "旧描述",
-                                "prompt": "生成一张海报",
+                                "title": "Old Prompt",
+                                "description": "Old Description",
+                                "prompt": "Generate a poster",
                                 "mode": "generate",
                                 "image_size": "4:3",
                                 "image_count": "1",
                                 "quick_access": True,
-                                "category": "工作",
+                                "category": "Work",
                             }
                         ]
                     },
@@ -37,14 +37,14 @@ class PromptLibraryServiceTests(unittest.TestCase):
 
             self.assertEqual(len(service.list_prompts()), 1)
             original = service.list_prompts()[0]
-            self.assertEqual(original["description"], "旧描述")
+            self.assertEqual(original["description"], "Old Description")
             self.assertEqual(original["image_size"], "4:3")
             self.assertTrue(original["quick_access"])
 
             created = service.create_prompt(
                 {
-                    "title": "新提示词",
-                    "prompt": "把参考图改成杂志封面",
+                    "title": "New Prompt",
+                    "prompt": "Turn the reference image into a magazine cover",
                     "mode": "edit",
                     "preview": "/example.png",
                     "reference_image_urls": ["/ref.png"],
@@ -54,9 +54,9 @@ class PromptLibraryServiceTests(unittest.TestCase):
             self.assertEqual(created["mode"], "edit")
             self.assertEqual(len(storage.load_prompt_library()), 2)
 
-            updated = service.update_prompt(created["id"], {"title": "新版提示词", "reference_image_urls": "/a.png\n/b.png"})
+            updated = service.update_prompt(created["id"], {"title": "Updated Prompt", "reference_image_urls": "/a.png\n/b.png"})
             self.assertIsNotNone(updated)
-            self.assertEqual(updated["title"], "新版提示词")
+            self.assertEqual(updated["title"], "Updated Prompt")
             self.assertEqual(updated["reference_image_urls"], ["/a.png", "/b.png"])
 
             asset_url = service.save_asset(b"image-bytes", filename="sample.png", content_type="image/png")
@@ -76,10 +76,10 @@ class PromptLibraryServiceTests(unittest.TestCase):
                         "prompts": [
                             {
                                 "id": "quick",
-                                "title": "快捷提示词",
-                                "prompt": "生成快捷内容",
+                                "title": "Quick Prompt",
+                                "prompt": "Generate quick content",
                                 "quick_access": True,
-                                "category": "内置快捷",
+                                "category": "Built-in Quick",
                             }
                         ]
                     },
@@ -92,9 +92,9 @@ class PromptLibraryServiceTests(unittest.TestCase):
                 [
                     {
                         "id": "legacy",
-                        "title": "旧库提示词",
-                        "prompt": "生成旧库内容",
-                        "category": "工作",
+                        "title": "Legacy Library Prompt",
+                        "prompt": "Generate legacy library content",
+                        "category": "Work",
                     }
                 ]
             )
@@ -114,8 +114,8 @@ class PromptLibraryServiceTests(unittest.TestCase):
 
             personal = service.create_user_prompt(
                 {
-                    "title": "用户提示词",
-                    "prompt": "生成一张柔和光线的人像",
+                    "title": "User Prompt",
+                    "prompt": "Generate a softly lit portrait",
                     "mode": "generate",
                 },
                 user,
@@ -137,7 +137,7 @@ class PromptLibraryServiceTests(unittest.TestCase):
 
             share = service.create_share(approved, user, source_prompt_id=approved["id"])
             self.assertEqual(share["status"], "shared")
-            self.assertEqual(service.get_shared_prompt(share["share_id"])["title"], "用户提示词")
+            self.assertEqual(service.get_shared_prompt(share["share_id"])["title"], "User Prompt")
 
             imported = service.import_shared_prompt(share["share_id"], admin)
             self.assertIsNotNone(imported)

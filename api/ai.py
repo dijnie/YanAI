@@ -150,7 +150,7 @@ def create_router() -> APIRouter:
     def image_quota_cost(identity: dict[str, object], channel: str) -> int:
         if identity.get("role") != "user":
             return 0
-        if str(channel or "").startswith("个人渠道/"):
+        if str(channel or "").startswith("Personal Channel/"):
             return 0
         return 1
 
@@ -177,13 +177,13 @@ def create_router() -> APIRouter:
         payload["request_id"] = request_id
         use_personal_quota_free = attach_personal_image_channel(identity, payload, body.model)
         quota_request_id = None if use_personal_quota_free else reserve_image_quota(identity, int(body.n or 1), request_id)
-        call = LoggedCall(identity, "/v1/images/generations", body.model, "文生图", request_id=request_id)
+        call = LoggedCall(identity, "/v1/images/generations", body.model, "Text-to-Image", request_id=request_id)
         try:
             if not body.stream:
                 routed = await run_in_threadpool(channel_service.call_generation, payload)
                 if routed is not None:
                     result, channel_name = routed
-                    call.log("渠道调用完成", result)
+                    call.log("Channel call completed", result)
                     count = finalize_image_result(
                         identity,
                         result,
@@ -259,13 +259,13 @@ def create_router() -> APIRouter:
         }
         use_personal_quota_free = attach_personal_image_channel(identity, payload, model)
         quota_request_id = None if use_personal_quota_free else reserve_image_quota(identity, int(n or 1), request_id)
-        call = LoggedCall(identity, "/v1/images/edits", model, "图生图", request_id=request_id)
+        call = LoggedCall(identity, "/v1/images/edits", model, "Image-to-Image", request_id=request_id)
         try:
             if not stream:
                 routed = await run_in_threadpool(channel_service.call_edit, payload)
                 if routed is not None:
                     result, channel_name = routed
-                    call.log("渠道调用完成", result)
+                    call.log("Channel call completed", result)
                     count = finalize_image_result(
                         identity,
                         result,
@@ -313,7 +313,7 @@ def create_router() -> APIRouter:
         model = str(payload.get("model") or "auto")
         request_id = request_id_from_request(request)
         payload["request_id"] = request_id
-        call = LoggedCall(identity, "/v1/chat/completions", model, "文本生成", request_id=request_id)
+        call = LoggedCall(identity, "/v1/chat/completions", model, "Text Generation", request_id=request_id)
         return await call.run(openai_v1_chat_complete.handle, payload)
 
     @router.post("/v1/responses")

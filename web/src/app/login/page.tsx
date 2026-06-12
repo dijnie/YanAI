@@ -48,7 +48,7 @@ export default function LoginPage() {
           : await login({ email: email.trim(), password });
       const sessionKey = mode === "admin" ? authKey.trim() : data.token || "";
       if (!sessionKey) {
-        throw new Error("登录未返回有效会话");
+        throw new Error("Login did not return a valid session");
       }
       await setStoredAuthSession({
         key: sessionKey,
@@ -60,7 +60,7 @@ export default function LoginPage() {
       });
       router.replace(getDefaultRouteForRole(data.role));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "登录失败");
+      toast.error(error instanceof Error ? error.message : "Login failed");
     } finally {
       setIsSubmitting(false);
     }
@@ -83,15 +83,15 @@ export default function LoginPage() {
               <Sparkles className="size-5" />
             </div>
             <div className="space-y-2">
-              <h1 className="text-3xl font-semibold tracking-tight text-stone-950">颜AI</h1>
-              <p className="text-sm leading-6 text-stone-500">登录后开始创作和管理你的 AI 美图。</p>
+              <h1 className="text-3xl font-semibold tracking-tight text-stone-950">YanAI</h1>
+              <p className="text-sm leading-6 text-stone-500">Log in to start creating and managing your AI images.</p>
             </div>
           </div>
 
           <div className="grid grid-cols-2 rounded-2xl bg-rose-50 p-1 text-sm font-medium">
             {[
-              { value: "user" as const, label: "个人登录", icon: Mail },
-              { value: "admin" as const, label: "管理员", icon: KeyRound },
+              { value: "user" as const, label: "Personal Login", icon: Mail },
+              { value: "admin" as const, label: "Admin", icon: KeyRound },
             ].map((item) => {
               const Icon = item.icon;
               return (
@@ -117,7 +117,7 @@ export default function LoginPage() {
                 type="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                placeholder="邮箱"
+                placeholder="Email"
                 className="h-12 rounded-lg border-rose-100 bg-white px-4"
               />
               <Input
@@ -127,7 +127,7 @@ export default function LoginPage() {
                 onKeyDown={(event) => {
                   if (event.key === "Enter") void handleLogin();
                 }}
-                placeholder="密码"
+                placeholder="Password"
                 className="h-12 rounded-lg border-rose-100 bg-white px-4"
               />
             </div>
@@ -140,7 +140,7 @@ export default function LoginPage() {
                 onKeyDown={(event) => {
                   if (event.key === "Enter") void handleLogin();
                 }}
-                placeholder="管理员密钥"
+                placeholder="Admin key"
                 className="h-12 rounded-lg border-rose-100 bg-white px-4"
               />
             </div>
@@ -152,7 +152,7 @@ export default function LoginPage() {
             disabled={isSubmitting}
           >
             {isSubmitting ? <LoaderCircle className="size-4 animate-spin" /> : null}
-            登录
+            Log In
           </Button>
 
           {mode === "user" && registerOptions?.linuxdo_oauth_enabled ? (
@@ -162,15 +162,15 @@ export default function LoginPage() {
               className="h-12 w-full rounded-lg border-rose-100 bg-white text-stone-800 hover:bg-rose-50"
               onClick={startLinuxDoOAuth}
             >
-              使用 Linux DO 登录 / 注册
+              Log in / Sign up with Linux DO
             </Button>
           ) : null}
 
           {mode === "user" ? (
             <div className="text-center text-sm text-stone-500">
-              还没有账号？
+              Don&apos;t have an account?
               <Link href="/signup" className="ml-1 font-medium text-rose-600 hover:text-rose-700">
-                注册个人账号
+                Create a personal account
               </Link>
             </div>
           ) : null}

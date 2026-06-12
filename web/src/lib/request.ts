@@ -82,7 +82,7 @@ request.interceptors.response.use(
             errorMessageFromValue(errorPayload?.error) ||
             errorPayload?.message ||
             error.message ||
-            `请求失败 (${status || 500})`;
+            `Request failed (${status || 500})`;
         return Promise.reject(new Error(message));
     },
 );

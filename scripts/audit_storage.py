@@ -16,22 +16,22 @@ DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="只读审计 YanAI 旧 JSON 存储数据",
+        description="Read-only audit of YanAI legacy JSON storage data",
     )
     parser.add_argument(
         "--data-dir",
         default=str(DATA_DIR),
-        help="JSON 数据目录，默认 ./data",
+        help="JSON data directory, defaults to ./data",
     )
     parser.add_argument(
         "--json",
         action="store_true",
-        help="输出机器可读 JSON 报告",
+        help="Output a machine-readable JSON report",
     )
     parser.add_argument(
         "--fail-on-issues",
         action="store_true",
-        help="发现异常 JSON、缺失主键或重复主键时返回非零退出码",
+        help="Return a non-zero exit code when invalid JSON, missing primary keys, or duplicate primary keys are found",
     )
     args = parser.parse_args()
 

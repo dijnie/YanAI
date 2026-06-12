@@ -102,8 +102,8 @@ def _load_settings() -> LoadedSettings:
     auth_key = _normalize_auth_key(os.getenv("CHATGPT2API_AUTH_KEY") or raw_config.get("auth-key"))
     if _is_invalid_auth_key(auth_key):
         raise ValueError(
-            "❌ auth-key 未设置！\n"
-            "请在环境变量 CHATGPT2API_AUTH_KEY 中设置，或者在 config.json 中填写 auth-key。"
+            "❌ auth-key is not set!\n"
+            "Please set it via the CHATGPT2API_AUTH_KEY environment variable, or fill in auth-key in config.json."
         )
 
     try:
@@ -126,11 +126,11 @@ class ConfigStore:
         self._system_settings_seeded = False
         if _is_invalid_auth_key(self.auth_key):
             raise ValueError(
-                "❌ auth-key 未设置！\n"
-                "请按以下任意一种方式解决：\n"
-                "1. 在 Render 的 Environment 变量中添加：\n"
+                "❌ auth-key is not set!\n"
+                "Please resolve it in either of the following ways:\n"
+                "1. Add it to the Environment variables in Render:\n"
                 "   CHATGPT2API_AUTH_KEY = your_real_auth_key\n"
-                "2. 或者在 config.json 中填写：\n"
+                "2. Or fill it in config.json:\n"
                 '   "auth-key": "your_real_auth_key"'
             )
 
@@ -457,14 +457,14 @@ class ConfigStore:
         return self.get()
 
     def get_storage_backend(self) -> StorageBackend:
-        """获取存储后端实例（单例）"""
+        """Get the storage backend instance (singleton)."""
         if self._storage_backend is None:
             from services.storage.factory import create_storage_backend
             self._storage_backend = create_storage_backend(DATA_DIR, self.data)
         return self._storage_backend
 
     def get_repository_provider(self) -> RepositoryProvider | None:
-        """获取数据库 repository provider；非数据库后端返回 None。"""
+        """Get the database repository provider; returns None for non-database backends."""
         storage = self.get_storage_backend()
         provider = getattr(storage, "repository_provider", None)
         return provider if isinstance(provider, RepositoryProvider) else None

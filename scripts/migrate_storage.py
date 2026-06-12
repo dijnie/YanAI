@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-存储后端数据迁移脚本
+Storage backend data migration script
 
-用法：
+Usage:
   python scripts/migrate_storage.py --from json --to postgres
   python scripts/migrate_storage.py --from json --to postgres --dry-run
   python scripts/migrate_storage.py --from json --to postgres --backup-dir data/backups/pre-postgres
@@ -19,7 +19,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-# 添加项目根目录到 Python 路径
+# Add project root directory to the Python path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 DATA_DIR = Path(__file__).resolve().parents[1] / "data"
@@ -59,7 +59,7 @@ DATASET_ACCESSORS = {
 
 
 def export_to_json(output_file: str, *, dry_run: bool = False):
-    """导出当前存储后端的完整数据到 JSON 文件"""
+    """Export the full data of the current storage backend to a JSON file"""
     print(f"[migrate] Exporting data to {output_file}")
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     storage = create_storage_backend(DATA_DIR)
@@ -95,7 +95,7 @@ def import_from_json(
     backup_dir: str | None = None,
     verify_only: bool = False,
 ):
-    """从 JSON 文件导入数据到当前存储后端"""
+    """Import data from a JSON file into the current storage backend"""
     print(f"[migrate] Importing data from {input_file}")
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     input_path = Path(input_file)
@@ -152,16 +152,16 @@ def migrate_data(
     backup_dir: str | None = None,
     verify_only: bool = False,
 ):
-    """从一个存储后端迁移到另一个"""
+    """Migrate from one storage backend to another"""
     print(f"[migrate] Migrating from {from_backend} to {to_backend}")
     DATA_DIR.mkdir(parents=True, exist_ok=True)
-    # 保存原始环境变量
+    # Save the original environment variable
     original_backend = os.environ.get("STORAGE_BACKEND")
     from_storage = None
     to_storage = None
 
     try:
-        # 从源后端读取数据
+        # Read data from the source backend
         os.environ["STORAGE_BACKEND"] = from_backend
         from_storage = create_storage_backend(DATA_DIR)
         source_data = _load_all_datasets(from_storage)
@@ -187,7 +187,7 @@ def migrate_data(
         if backup_dir:
             _create_and_verify_backup(backup_dir)
         
-        # 写入目标后端
+        # Write to the target backend
         os.environ["STORAGE_BACKEND"] = to_backend
         to_storage = create_storage_backend(DATA_DIR)
         try:
@@ -207,7 +207,7 @@ def migrate_data(
     finally:
         _close_storage(to_storage)
         _close_storage(from_storage)
-        # 恢复原始环境变量
+        # Restore the original environment variable
         if original_backend:
             os.environ["STORAGE_BACKEND"] = original_backend
         elif "STORAGE_BACKEND" in os.environ:
@@ -523,33 +523,33 @@ def _close_storage(storage) -> None:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="ChatGPT2API 存储后端数据迁移工具",
+        description="ChatGPT2API storage backend data migration tool",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-示例:
-  # 从 JSON 迁移到 PostgreSQL
+Examples:
+  # Migrate from JSON to PostgreSQL
   python scripts/migrate_storage.py --from json --to postgres
 
-  # 迁移前只预演，不写入目标后端
+  # Dry run before migrating, without writing to the target backend
   python scripts/migrate_storage.py --from json --to postgres --dry-run
 
-  # 迁移前生成并校验完整 JSON 备份
+  # Create and verify a full JSON backup before migrating
   python scripts/migrate_storage.py --from json --to postgres --backup-dir data/backups/pre-postgres
-  
-  # 只校验两个后端的数据数量和主键集合
+
+  # Only verify the item counts and primary key sets of both backends
   python scripts/migrate_storage.py --from json --to postgres --verify-only
-  
-  # 导出当前后端完整数据到 JSON 文件
+
+  # Export the full data of the current backend to a JSON file
   python scripts/migrate_storage.py --export backup.json
-  
-  # 从完整 JSON 备份导入数据
+
+  # Import data from a full JSON backup
   python scripts/migrate_storage.py --import backup.json
 
-环境变量:
-  STORAGE_BACKEND  - 存储后端类型 (json, sqlite, postgres, git)
-  DATABASE_URL     - 数据库连接字符串
-  GIT_REPO_URL     - Git 仓库地址
-  GIT_TOKEN        - Git 访问令牌
+Environment variables:
+  STORAGE_BACKEND  - Storage backend type (json, sqlite, postgres, git)
+  DATABASE_URL     - Database connection string
+  GIT_REPO_URL     - Git repository URL
+  GIT_TOKEN        - Git access token
         """
     )
     
@@ -557,44 +557,44 @@ def main():
         "--from",
         dest="from_backend",
         choices=["json", "sqlite", "postgres", "git"],
-        help="源存储后端",
+        help="Source storage backend",
     )
     parser.add_argument(
         "--to",
         dest="to_backend",
         choices=["json", "sqlite", "postgres", "git"],
-        help="目标存储后端",
+        help="Target storage backend",
     )
     parser.add_argument(
         "--export",
         dest="export_file",
         metavar="FILE",
-        help="导出数据到 JSON 文件",
+        help="Export data to a JSON file",
     )
     parser.add_argument(
         "--import",
         dest="import_file",
         metavar="FILE",
-        help="从 JSON 文件导入数据",
+        help="Import data from a JSON file",
     )
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="预演迁移/导入/导出，不写入任何数据",
+        help="Dry-run the migration/import/export without writing any data",
     )
     parser.add_argument(
         "--backup-dir",
-        help="写入前先生成并校验完整 JSON 备份目录；与 --verify-only 单独使用时校验该备份目录",
+        help="Create and verify a full JSON backup directory before writing; when used alone with --verify-only, verify that backup directory",
     )
     parser.add_argument(
         "--verify-only",
         action="store_true",
-        help="只执行校验，不迁移、不导入、不导出",
+        help="Only run verification; do not migrate, import, or export",
     )
     
     args = parser.parse_args()
     
-    # 检查参数
+    # Check arguments
     if args.from_backend and args.to_backend:
         migrate_data(
             args.from_backend,

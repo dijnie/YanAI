@@ -18,7 +18,7 @@ class RepositoryDatabaseStorageTest(unittest.TestCase):
             db_path = Path(tmp_dir) / "storage.db"
             storage = DatabaseStorageBackend(f"sqlite:///{db_path.as_posix()}")
 
-            storage.save_accounts([{"access_token": "token-a", "status": "正常", "quota": 3, "user_id": "chatgpt-user-a"}])
+            storage.save_accounts([{"access_token": "token-a", "status": "Active", "quota": 3, "user_id": "chatgpt-user-a"}])
             storage.save_auth_keys([{"id": "key-a", "key_hash": "hash-a", "role": "admin", "enabled": True}])
             storage.save_users([{"id": "user-a", "email": "user@example.com", "role": "user", "status": "active", "quota": 5, "quota_used": 1}])
             storage.save_sessions([{"id": "session-a", "token_hash": "token-hash-a", "user_id": "user-a", "expires_at": "2026-06-01T00:00:00+00:00"}])
@@ -66,7 +66,7 @@ class RepositoryDatabaseStorageTest(unittest.TestCase):
                     text("SELECT access_token_hash, status, quota FROM accounts")
                 ).mappings().one()
                 self.assertEqual(account["access_token_hash"], hashlib.sha256(b"token-a").hexdigest())
-                self.assertEqual(account["status"], "正常")
+                self.assertEqual(account["status"], "Active")
                 self.assertEqual(account["quota"], 3)
             storage.close()
 
@@ -91,12 +91,12 @@ class RepositoryDatabaseStorageTest(unittest.TestCase):
                 connection.execute(text("CREATE TABLE accounts (id INTEGER PRIMARY KEY AUTOINCREMENT, access_token VARCHAR(2048), data TEXT NOT NULL)"))
                 connection.execute(
                     text("INSERT INTO accounts (access_token, data) VALUES (:token, :data)"),
-                    {"token": "legacy-token", "data": json.dumps({"access_token": "legacy-token", "status": "正常"})},
+                    {"token": "legacy-token", "data": json.dumps({"access_token": "legacy-token", "status": "Active"})},
                 )
             engine.dispose()
 
             storage = DatabaseStorageBackend(url)
-            self.assertEqual(storage.load_accounts(), [{"access_token": "legacy-token", "status": "正常"}])
+            self.assertEqual(storage.load_accounts(), [{"access_token": "legacy-token", "status": "Active"}])
             storage.save_accounts(storage.load_accounts())
 
             with storage.engine.connect() as connection:

@@ -83,11 +83,11 @@ function normalizeMode(value?: string): "generate" | "edit" {
 }
 
 function modeLabel(value?: string) {
-  return normalizeMode(value) === "edit" ? "图生图" : "文生图";
+  return normalizeMode(value) === "edit" ? "Image to Image" : "Text to Image";
 }
 
 function categoryLabel(item: PromptLibraryItem) {
-  return [item.category, item.sub_category].filter(Boolean).join(" / ") || "未分类";
+  return [item.category, item.sub_category].filter(Boolean).join(" / ") || "Uncategorized";
 }
 
 function promptStatus(item: PromptLibraryItem) {
@@ -95,11 +95,11 @@ function promptStatus(item: PromptLibraryItem) {
 }
 
 function statusLabel(status?: string) {
-  if (status === "personal") return "个人";
-  if (status === "submitted") return "待审核";
-  if (status === "rejected") return "已驳回";
-  if (status === "shared") return "分享";
-  return "公共";
+  if (status === "personal") return "Personal";
+  if (status === "submitted") return "Pending Review";
+  if (status === "rejected") return "Rejected";
+  if (status === "shared") return "Shared";
+  return "Public";
 }
 
 function statusBadgeVariant(status?: string): "success" | "warning" | "danger" | "info" {
@@ -188,8 +188,8 @@ function PromptManagerContent({ session }: { session: StoredAuthSession }) {
   const isAdmin = session.role === "admin";
   const [items, setItems] = useState<PromptLibraryItem[]>([]);
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState("全部");
-  const [statusFilter, setStatusFilter] = useState("全部");
+  const [category, setCategory] = useState("All");
+  const [statusFilter, setStatusFilter] = useState("All");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -204,22 +204,22 @@ function PromptManagerContent({ session }: { session: StoredAuthSession }) {
 
   const categories = useMemo(() => {
     const values = Array.from(new Set(items.map(categoryLabel))).sort((a, b) => a.localeCompare(b, "zh-CN"));
-    return ["全部", ...values];
+    return ["All", ...values];
   }, [items]);
 
   const statusFilters = useMemo(() => {
     const values = Array.from(new Set(items.map((item) => statusLabel(promptStatus(item)))));
-    return ["全部", ...values];
+    return ["All", ...values];
   }, [items]);
 
   const filteredItems = useMemo(() => {
     const text = query.trim().toLowerCase();
     return items.filter((item) => {
       const itemCategory = categoryLabel(item);
-      if (category !== "全部" && itemCategory !== category) {
+      if (category !== "All" && itemCategory !== category) {
         return false;
       }
-      if (statusFilter !== "全部" && statusLabel(promptStatus(item)) !== statusFilter) {
+      if (statusFilter !== "All" && statusLabel(promptStatus(item)) !== statusFilter) {
         return false;
       }
       if (!text) {
@@ -237,7 +237,7 @@ function PromptManagerContent({ session }: { session: StoredAuthSession }) {
       const data = isAdmin ? await fetchAdminPrompts() : await fetchMyPrompts();
       setItems(data.items);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "加载提示词失败");
+      toast.error(error instanceof Error ? error.message : "Failed to load prompts");
     } finally {
       setIsLoading(false);
     }
@@ -250,7 +250,7 @@ function PromptManagerContent({ session }: { session: StoredAuthSession }) {
   const loadSharePreview = useCallback(async (value: string) => {
     const shareId = extractShareId(value);
     if (!shareId) {
-      toast.error("请输入分享链接或分享 ID");
+      toast.error("Enter a share link or share ID");
       return null;
     }
     setIsImportingShare(true);
@@ -261,7 +261,7 @@ function PromptManagerContent({ session }: { session: StoredAuthSession }) {
       return data.item;
     } catch (error) {
       setSharePreview(null);
-      toast.error(error instanceof Error ? error.message : "读取分享失败");
+      toast.error(error instanceof Error ? error.message : "Failed to load share");
       return null;
     } finally {
       setIsImportingShare(false);
@@ -311,9 +311,9 @@ function PromptManagerContent({ session }: { session: StoredAuthSession }) {
         const urls = splitUrls(current.reference_image_urls);
         return { ...current, reference_image_urls: [...urls, result.url].join("\n") };
       });
-      toast.success("示例图已上传");
+      toast.success("Example image uploaded");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "上传失败");
+      toast.error(error instanceof Error ? error.message : "Upload failed");
     } finally {
       setIsUploading(false);
     }
@@ -322,7 +322,7 @@ function PromptManagerContent({ session }: { session: StoredAuthSession }) {
   const handleSubmit = async () => {
     const payload = toPayload(form);
     if (!payload.title || !payload.prompt) {
-      toast.error("请填写标题和提示词");
+      toast.error("Enter a title and prompt");
       return;
     }
     setIsSaving(true);
@@ -336,30 +336,30 @@ function PromptManagerContent({ session }: { session: StoredAuthSession }) {
           : await createMyPrompt(payload);
       setItems(data.items);
       setDialogOpen(false);
-      toast.success(editingItem ? "提示词已更新" : "提示词已添加");
+      toast.success(editingItem ? "Prompt updated" : "Prompt added");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "保存失败");
+      toast.error(error instanceof Error ? error.message : "Save failed");
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleDelete = async (item: PromptLibraryItem) => {
-    if (!window.confirm(`删除「${item.title}」？`)) {
+    if (!window.confirm(`Delete "${item.title}"?`)) {
       return;
     }
     try {
       const data = isAdmin ? await deleteAdminPrompt(item.id) : await deleteMyPrompt(item.id);
       setItems(data.items);
-      toast.success("提示词已删除");
+      toast.success("Prompt deleted");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "删除失败");
+      toast.error(error instanceof Error ? error.message : "Delete failed");
     }
   };
 
   const copyPrompt = async (item: PromptLibraryItem) => {
     await navigator.clipboard.writeText(item.prompt);
-    toast.success("提示词已复制");
+    toast.success("Prompt copied");
   };
 
   const sharePromptItem = async (item: PromptLibraryItem) => {
@@ -369,16 +369,16 @@ function PromptManagerContent({ session }: { session: StoredAuthSession }) {
       if (navigator.share) {
         try {
           await navigator.share({ title: item.title, text: item.description || item.title, url: shareUrl });
-          toast.success("分享已打开");
+          toast.success("Share sheet opened");
           return;
         } catch {
           // Fall back to clipboard below when native sharing is cancelled or unavailable.
         }
       }
       await navigator.clipboard.writeText(shareUrl);
-      toast.success("分享链接已复制");
+      toast.success("Share link copied");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "分享失败");
+      toast.error(error instanceof Error ? error.message : "Share failed");
     }
   };
 
@@ -386,9 +386,9 @@ function PromptManagerContent({ session }: { session: StoredAuthSession }) {
     try {
       const data = await submitMyPrompt(item.id);
       setItems(data.items);
-      toast.success("已推送给管理员审核");
+      toast.success("Submitted to admins for review");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "提交失败");
+      toast.error(error instanceof Error ? error.message : "Submit failed");
     }
   };
 
@@ -396,27 +396,27 @@ function PromptManagerContent({ session }: { session: StoredAuthSession }) {
     try {
       const data = await approveAdminPrompt(item.id);
       setItems(data.items);
-      toast.success("已加入公共提示词库");
+      toast.success("Added to the public prompt library");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "审核失败");
+      toast.error(error instanceof Error ? error.message : "Review failed");
     }
   };
 
   const handleReject = async (item: PromptLibraryItem) => {
-    const reason = window.prompt(`驳回「${item.title}」的原因（可留空）`) || "";
+    const reason = window.prompt(`Reason for rejecting "${item.title}" (optional)`) || "";
     try {
       const data = await rejectAdminPrompt(item.id, reason);
       setItems(data.items);
-      toast.success("已驳回");
+      toast.success("Rejected");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "驳回失败");
+      toast.error(error instanceof Error ? error.message : "Reject failed");
     }
   };
 
   const handleImportShare = async () => {
     const shareId = extractShareId(shareInput);
     if (!shareId) {
-      toast.error("请输入分享链接或分享 ID");
+      toast.error("Enter a share link or share ID");
       return;
     }
     setIsImportingShare(true);
@@ -426,9 +426,9 @@ function PromptManagerContent({ session }: { session: StoredAuthSession }) {
       setShareDialogOpen(false);
       setShareInput("");
       setSharePreview(null);
-      toast.success(isAdmin ? "已导入公共提示词库" : "已导入我的提示词");
+      toast.success(isAdmin ? "Imported to the public prompt library" : "Imported to my prompts");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "导入失败");
+      toast.error(error instanceof Error ? error.message : "Import failed");
     } finally {
       setIsImportingShare(false);
     }
@@ -440,9 +440,9 @@ function PromptManagerContent({ session }: { session: StoredAuthSession }) {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="space-y-1">
           <div className="text-xs font-semibold tracking-[0.18em] text-stone-500 uppercase">Prompts</div>
-          <h1 className="text-2xl font-semibold tracking-tight">{isAdmin ? "提示词管理" : "我的提示词"}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{isAdmin ? "Prompt Management" : "My Prompts"}</h1>
           <p className="text-sm text-stone-500">
-            {isAdmin ? "审核用户提交的提示词，维护公共提示词库。" : "创建、分享和提交自己的提示词，审核通过后会进入公共库。"}
+            {isAdmin ? "Review user-submitted prompts and maintain the public prompt library." : "Create, share, and submit your own prompts. Approved prompts join the public library."}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -452,15 +452,15 @@ function PromptManagerContent({ session }: { session: StoredAuthSession }) {
             className="h-10 rounded-xl border-stone-200 bg-white px-4 text-stone-700"
           >
             <Upload className="size-4" />
-            导入分享
+            Import Share
           </Button>
           <Button variant="outline" onClick={() => void loadPrompts()} disabled={isLoading} className="h-10 rounded-xl border-stone-200 bg-white px-4 text-stone-700">
             <RefreshCw className={cn("size-4", isLoading && "animate-spin")} />
-            刷新
+            Refresh
           </Button>
           <Button onClick={openCreateDialog} className="h-10 rounded-xl bg-stone-950 px-4 text-white hover:bg-stone-800">
             <Plus className="size-4" />
-            {isAdmin ? "添加公共提示词" : "添加提示词"}
+            {isAdmin ? "Add Public Prompt" : "Add Prompt"}
           </Button>
         </div>
       </div>
@@ -472,11 +472,11 @@ function PromptManagerContent({ session }: { session: StoredAuthSession }) {
             <Input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="搜索标题、作者、分类或提示词内容"
+              placeholder="Search by title, author, category, or prompt content"
               className="h-10 rounded-xl border-stone-200 bg-stone-50 pl-9 shadow-none focus-visible:bg-white"
             />
           </div>
-          <div className="text-sm text-stone-500">共 {items.length} 条，当前 {filteredItems.length} 条</div>
+          <div className="text-sm text-stone-500">{items.length} total, {filteredItems.length} shown</div>
         </div>
         <div className="flex flex-wrap gap-2">
           {categories.map((item) => (
@@ -517,11 +517,11 @@ function PromptManagerContent({ session }: { session: StoredAuthSession }) {
       {isLoading ? (
         <div className="flex min-h-[320px] items-center justify-center text-sm text-stone-500">
           <LoaderCircle className="mr-2 size-4 animate-spin" />
-          正在加载提示词
+          Loading prompts
         </div>
       ) : filteredItems.length === 0 ? (
         <div className="flex min-h-[320px] items-center justify-center rounded-lg border border-dashed border-rose-100 bg-white/60 text-sm text-stone-500">
-          没有找到提示词
+          No prompts found
         </div>
       ) : (
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -536,7 +536,7 @@ function PromptManagerContent({ session }: { session: StoredAuthSession }) {
               <article key={item.id} className="overflow-hidden rounded-lg border border-stone-200 bg-white shadow-sm">
                 <div className="aspect-[4/3] bg-stone-100">
                   {previewUrl ? (
-                    <img src={previewUrl} alt={`${item.title} 示例图`} className="h-full w-full object-cover" loading="lazy" />
+                    <img src={previewUrl} alt={`${item.title} example image`} className="h-full w-full object-cover" loading="lazy" />
                   ) : (
                     <div className="flex h-full items-center justify-center text-stone-400">
                       <ImagePlus className="size-8" />
@@ -561,27 +561,27 @@ function PromptManagerContent({ session }: { session: StoredAuthSession }) {
                   </div>
                   <div className="mt-auto flex items-center justify-between gap-2">
                     <div className="min-w-0 truncate text-xs text-stone-400">
-                      {item.owner_name ? `${item.owner_name} · ` : ""}
-                      {item.author || "未署名"}
+                      {item.owner_name ? `${item.owner_name} - ` : ""}
+                      {item.author || "Anonymous"}
                     </div>
                     <div className="flex shrink-0 items-center gap-1">
-                      <Button variant="ghost" size="icon" className="size-8 rounded-lg text-stone-500 hover:bg-stone-100" onClick={() => void copyPrompt(item)} aria-label="复制提示词" title="复制提示词">
+                      <Button variant="ghost" size="icon" className="size-8 rounded-lg text-stone-500 hover:bg-stone-100" onClick={() => void copyPrompt(item)} aria-label="Copy prompt" title="Copy prompt">
                         <Copy className="size-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="size-8 rounded-lg text-stone-500 hover:bg-stone-100" onClick={() => void sharePromptItem(item)} aria-label="分享提示词" title="分享提示词">
+                      <Button variant="ghost" size="icon" className="size-8 rounded-lg text-stone-500 hover:bg-stone-100" onClick={() => void sharePromptItem(item)} aria-label="Share prompt" title="Share prompt">
                         <Share2 className="size-4" />
                       </Button>
                       {canSubmit ? (
-                        <Button variant="ghost" size="icon" className="size-8 rounded-lg text-amber-600 hover:bg-amber-50" onClick={() => void handleSubmitForReview(item)} aria-label="提交审核" title="提交审核">
+                        <Button variant="ghost" size="icon" className="size-8 rounded-lg text-amber-600 hover:bg-amber-50" onClick={() => void handleSubmitForReview(item)} aria-label="Submit for review" title="Submit for review">
                           <Upload className="size-4" />
                         </Button>
                       ) : null}
                       {canReview ? (
                         <>
-                          <Button variant="ghost" size="icon" className="size-8 rounded-lg text-emerald-600 hover:bg-emerald-50" onClick={() => void handleApprove(item)} aria-label="通过审核" title="通过审核">
+                          <Button variant="ghost" size="icon" className="size-8 rounded-lg text-emerald-600 hover:bg-emerald-50" onClick={() => void handleApprove(item)} aria-label="Approve" title="Approve">
                             <CheckCircle2 className="size-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="size-8 rounded-lg text-rose-600 hover:bg-rose-50" onClick={() => void handleReject(item)} aria-label="驳回提示词" title="驳回提示词">
+                          <Button variant="ghost" size="icon" className="size-8 rounded-lg text-rose-600 hover:bg-rose-50" onClick={() => void handleReject(item)} aria-label="Reject prompt" title="Reject prompt">
                             <XCircle className="size-4" />
                           </Button>
                         </>
@@ -592,8 +592,8 @@ function PromptManagerContent({ session }: { session: StoredAuthSession }) {
                         disabled={!editable}
                         className="size-8 rounded-lg text-stone-500 hover:bg-stone-100 disabled:cursor-not-allowed disabled:text-stone-300"
                         onClick={() => openEditDialog(item)}
-                        aria-label="编辑提示词"
-                        title="编辑提示词"
+                        aria-label="Edit prompt"
+                        title="Edit prompt"
                       >
                         <Pencil className="size-4" />
                       </Button>
@@ -603,8 +603,8 @@ function PromptManagerContent({ session }: { session: StoredAuthSession }) {
                         disabled={!removable}
                         className="size-8 rounded-lg text-rose-500 hover:bg-rose-50 disabled:cursor-not-allowed disabled:text-stone-300"
                         onClick={() => void handleDelete(item)}
-                        aria-label="删除提示词"
-                        title="删除提示词"
+                        aria-label="Delete prompt"
+                        title="Delete prompt"
                       >
                         <Trash2 className="size-4" />
                       </Button>
@@ -620,21 +620,21 @@ function PromptManagerContent({ session }: { session: StoredAuthSession }) {
       <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
         <DialogContent className="w-[min(94vw,560px)] max-w-none rounded-lg p-0">
           <DialogHeader className="border-b border-stone-200 px-5 pt-5 pb-4 sm:px-6">
-            <DialogTitle className="text-xl font-semibold text-stone-950">导入分享提示词</DialogTitle>
+            <DialogTitle className="text-xl font-semibold text-stone-950">Import Shared Prompt</DialogTitle>
             <DialogDescription className="text-stone-500">
-              粘贴别人分享的链接或分享 ID，确认后会导入到{isAdmin ? "公共提示词库" : "我的提示词"}。
+              Paste a shared link or share ID. On confirm it will be imported to {isAdmin ? "the public prompt library" : "my prompts"}.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 px-5 py-5 sm:px-6">
             <label className="block space-y-1.5">
-              <span className="text-xs font-medium text-stone-500">分享链接 / ID</span>
+              <span className="text-xs font-medium text-stone-500">Share Link / ID</span>
               <Input
                 value={shareInput}
                 onChange={(event) => {
                   setShareInput(event.target.value);
                   setSharePreview(null);
                 }}
-                placeholder="例如 https://.../prompt-manager?share=xxxx"
+                placeholder="e.g. https://.../prompt-manager?share=xxxx"
                 className="h-10 rounded-xl border-stone-200"
               />
             </label>
@@ -655,7 +655,7 @@ function PromptManagerContent({ session }: { session: StoredAuthSession }) {
           </div>
           <div className="flex justify-end gap-2 border-t border-stone-200 px-5 py-4 sm:px-6">
             <Button type="button" variant="outline" onClick={() => setShareDialogOpen(false)} className="h-10 rounded-xl border-stone-200 bg-white px-4">
-              取消
+              Cancel
             </Button>
             <Button
               type="button"
@@ -665,7 +665,7 @@ function PromptManagerContent({ session }: { session: StoredAuthSession }) {
               className="h-10 rounded-xl border-stone-200 bg-white px-4"
             >
               {isImportingShare ? <LoaderCircle className="size-4 animate-spin" /> : <Search className="size-4" />}
-              预览
+              Preview
             </Button>
             <Button
               type="button"
@@ -674,7 +674,7 @@ function PromptManagerContent({ session }: { session: StoredAuthSession }) {
               className="h-10 rounded-xl bg-stone-950 px-4 text-white hover:bg-stone-800"
             >
               {isImportingShare ? <LoaderCircle className="size-4 animate-spin" /> : null}
-              导入
+              Import
             </Button>
           </div>
         </DialogContent>
@@ -684,57 +684,57 @@ function PromptManagerContent({ session }: { session: StoredAuthSession }) {
         <DialogContent className="flex max-h-[88vh] w-[min(94vw,860px)] max-w-none flex-col overflow-hidden rounded-lg p-0">
           <DialogHeader className="border-b border-stone-200 px-5 pt-5 pb-4 sm:px-6">
             <DialogTitle className="text-xl font-semibold text-stone-950">
-              {editingItem ? "编辑提示词" : "添加提示词"}
+              {editingItem ? "Edit Prompt" : "Add Prompt"}
             </DialogTitle>
             <DialogDescription className="text-stone-500">
-              标题、卡片描述、提示词和示例图会同步到画图页。
+              The title, card description, prompt, and example image sync to the image generation page.
             </DialogDescription>
           </DialogHeader>
           <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6">
             <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_280px]">
               <div className="space-y-4">
                 <label className="block space-y-1.5">
-                  <span className="text-xs font-medium text-stone-500">标题</span>
+                  <span className="text-xs font-medium text-stone-500">Title</span>
                   <Input value={form.title} onChange={(event) => updateForm({ title: event.target.value })} className="h-10 rounded-xl border-stone-200" />
                 </label>
                 <label className="block space-y-1.5">
-                  <span className="text-xs font-medium text-stone-500">卡片描述</span>
+                  <span className="text-xs font-medium text-stone-500">Card Description</span>
                   <Input value={form.description} onChange={(event) => updateForm({ description: event.target.value })} className="h-10 rounded-xl border-stone-200" />
                 </label>
                 <div className="grid gap-3 sm:grid-cols-3">
                   <label className="block space-y-1.5">
-                    <span className="text-xs font-medium text-stone-500">模式</span>
+                    <span className="text-xs font-medium text-stone-500">Mode</span>
                     <Select value={form.mode} onValueChange={(value) => updateForm({ mode: normalizeMode(value) })}>
                       <SelectTrigger className="h-10 rounded-xl border-stone-200 shadow-none">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="generate">文生图</SelectItem>
-                        <SelectItem value="edit">图生图</SelectItem>
+                        <SelectItem value="generate">Text to Image</SelectItem>
+                        <SelectItem value="edit">Image to Image</SelectItem>
                       </SelectContent>
                     </Select>
                   </label>
                   <label className="block space-y-1.5">
-                    <span className="text-xs font-medium text-stone-500">分类</span>
+                    <span className="text-xs font-medium text-stone-500">Category</span>
                     <Input value={form.category} onChange={(event) => updateForm({ category: event.target.value })} className="h-10 rounded-xl border-stone-200" />
                   </label>
                   <label className="block space-y-1.5">
-                    <span className="text-xs font-medium text-stone-500">子分类</span>
+                    <span className="text-xs font-medium text-stone-500">Subcategory</span>
                     <Input value={form.sub_category} onChange={(event) => updateForm({ sub_category: event.target.value })} className="h-10 rounded-xl border-stone-200" />
                   </label>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <label className="block space-y-1.5">
-                    <span className="text-xs font-medium text-stone-500">默认比例</span>
-                    <Input value={form.image_size} onChange={(event) => updateForm({ image_size: event.target.value })} placeholder="例如 4:3、1:1，留空为未指定" className="h-10 rounded-xl border-stone-200" />
+                    <span className="text-xs font-medium text-stone-500">Default Aspect Ratio</span>
+                    <Input value={form.image_size} onChange={(event) => updateForm({ image_size: event.target.value })} placeholder="e.g. 4:3 or 1:1; leave blank for unspecified" className="h-10 rounded-xl border-stone-200" />
                   </label>
                   <label className="block space-y-1.5">
-                    <span className="text-xs font-medium text-stone-500">默认张数</span>
-                    <Input value={form.image_count} onChange={(event) => updateForm({ image_count: event.target.value })} placeholder="例如 1，留空则不覆盖" className="h-10 rounded-xl border-stone-200" />
+                    <span className="text-xs font-medium text-stone-500">Default Image Count</span>
+                    <Input value={form.image_count} onChange={(event) => updateForm({ image_count: event.target.value })} placeholder="e.g. 1; leave blank to keep current" className="h-10 rounded-xl border-stone-200" />
                   </label>
                 </div>
                 <label className="block space-y-1.5">
-                  <span className="text-xs font-medium text-stone-500">提示词</span>
+                  <span className="text-xs font-medium text-stone-500">Prompt</span>
                   <Textarea
                     value={form.prompt}
                     onChange={(event) => updateForm({ prompt: event.target.value })}
@@ -743,11 +743,11 @@ function PromptManagerContent({ session }: { session: StoredAuthSession }) {
                 </label>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <label className="block space-y-1.5">
-                    <span className="text-xs font-medium text-stone-500">作者</span>
+                    <span className="text-xs font-medium text-stone-500">Author</span>
                     <Input value={form.author} onChange={(event) => updateForm({ author: event.target.value })} className="h-10 rounded-xl border-stone-200" />
                   </label>
                   <label className="block space-y-1.5">
-                    <span className="text-xs font-medium text-stone-500">来源链接</span>
+                    <span className="text-xs font-medium text-stone-500">Source Link</span>
                     <Input value={form.link} onChange={(event) => updateForm({ link: event.target.value })} className="h-10 rounded-xl border-stone-200" />
                   </label>
                 </div>
@@ -755,10 +755,10 @@ function PromptManagerContent({ session }: { session: StoredAuthSession }) {
               <div className="space-y-4">
                 <input ref={uploadInputRef} type="file" accept="image/*" className="hidden" onChange={(event) => void handleUpload(event)} />
                 <div className="space-y-2">
-                  <span className="text-xs font-medium text-stone-500">示例图</span>
+                  <span className="text-xs font-medium text-stone-500">Example Image</span>
                   <div className="aspect-[4/3] overflow-hidden rounded-lg border border-stone-200 bg-stone-100">
                     {formPreviewUrl ? (
-                      <img src={formPreviewUrl} alt="示例图预览" className="h-full w-full object-cover" />
+                      <img src={formPreviewUrl} alt="Example image preview" className="h-full w-full object-cover" />
                     ) : (
                       <div className="flex h-full items-center justify-center text-stone-400">
                         <ImagePlus className="size-8" />
@@ -773,15 +773,15 @@ function PromptManagerContent({ session }: { session: StoredAuthSession }) {
                     className="h-10 w-full rounded-xl border-stone-200 bg-white"
                   >
                     {isUploading ? <LoaderCircle className="size-4 animate-spin" /> : <ImagePlus className="size-4" />}
-                    上传示例图
+                    Upload Example Image
                   </Button>
                 </div>
                 <label className="block space-y-1.5">
-                  <span className="text-xs font-medium text-stone-500">示例图 URL</span>
+                  <span className="text-xs font-medium text-stone-500">Example Image URL</span>
                   <Input value={form.preview} onChange={(event) => updateForm({ preview: event.target.value })} className="h-10 rounded-xl border-stone-200" />
                 </label>
                 <label className="block space-y-1.5">
-                  <span className="text-xs font-medium text-stone-500">参考图 URL</span>
+                  <span className="text-xs font-medium text-stone-500">Reference Image URLs</span>
                   <Textarea
                     value={form.reference_image_urls}
                     onChange={(event) => updateForm({ reference_image_urls: event.target.value })}
@@ -793,11 +793,11 @@ function PromptManagerContent({ session }: { session: StoredAuthSession }) {
           </div>
           <div className="flex justify-end gap-2 border-t border-stone-200 px-5 py-4 sm:px-6">
             <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} className="h-10 rounded-xl border-stone-200 bg-white px-4">
-              取消
+              Cancel
             </Button>
             <Button type="button" onClick={() => void handleSubmit()} disabled={isSaving} className="h-10 rounded-xl bg-stone-950 px-4 text-white hover:bg-stone-800">
               {isSaving ? <LoaderCircle className="size-4 animate-spin" /> : null}
-              保存
+              Save
             </Button>
           </div>
         </DialogContent>

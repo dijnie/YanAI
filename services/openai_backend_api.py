@@ -21,7 +21,7 @@ from utils.turnstile import solve_turnstile_token
 
 @dataclass
 class ChatRequirements:
-    """保存一次对话请求所需的 sentinel token。"""
+    """Holds the sentinel tokens required for a single conversation request."""
     token: str
     proof_token: str = ""
     turnstile_token: str = ""
@@ -36,22 +36,23 @@ CODEX_IMAGE_MODEL = "codex-gpt-image-2"
 
 
 class OpenAIBackendAPI:
-    """ChatGPT Web 后端封装。
+    """ChatGPT Web backend wrapper.
 
-    说明：
-    - 传入 `access_token` 时，聊天和模型列表都会走已登录链路
-      例如 `/backend-api/sentinel/chat-requirements`、`/backend-api/conversation`
-    - 不传 `access_token` 时，会走未登录链路
-      例如 `/backend-anon/sentinel/chat-requirements`、`/backend-anon/conversation`
-    - `stream_conversation()` 是底层统一流式入口
-    - 协议兼容转换放在 `services.protocol`
+    Notes:
+    - When `access_token` is provided, chat and model listing use the authenticated endpoints,
+      e.g. `/backend-api/sentinel/chat-requirements`, `/backend-api/conversation`
+    - Without `access_token`, the anonymous endpoints are used,
+      e.g. `/backend-anon/sentinel/chat-requirements`, `/backend-anon/conversation`
+    - `stream_conversation()` is the unified low-level streaming entry point
+    - Protocol compatibility conversion lives in `services.protocol`
     """
 
     def __init__(self, access_token: str = "") -> None:
-        """初始化后端客户端。
+        """Initialize the backend client.
 
-        参数：
-        - `access_token`：可选。传入后表示使用已登录链路；不传则使用未登录链路。
+        Args:
+        - `access_token`: optional. When provided, the authenticated endpoints are used;
+          otherwise the anonymous endpoints are used.
         """
         self.base_url = "https://chatgpt.com"
         self.client_version = DEFAULT_CLIENT_VERSION
@@ -127,7 +128,7 @@ class OpenAIBackendAPI:
         return fp
 
     def _headers(self, path: str, extra: Optional[Dict[str, str]] = None) -> Dict[str, str]:
-        """构造请求头，并补上 web 端要求的 target path/route。"""
+        """Build request headers, adding the target path/route required by the web client."""
         headers = dict(self.session.headers)
         headers["X-OpenAI-Target-Path"] = path
         headers["X-OpenAI-Target-Route"] = path
@@ -136,7 +137,7 @@ class OpenAIBackendAPI:
         return headers
 
     def _bootstrap_headers(self) -> Dict[str, str]:
-        """构造首页预热请求头。"""
+        """Build the homepage warm-up request headers."""
         return {
             "User-Agent": self.user_agent,
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
@@ -152,7 +153,7 @@ class OpenAIBackendAPI:
         }
 
     def _build_requirements(self, data: Dict[str, Any], source_p: str = "") -> ChatRequirements:
-        """把 sentinel 响应整理成后续对话需要的 token 集合。"""
+        """Turn the sentinel response into the token set needed for subsequent conversation calls."""
         if (data.get("arkose") or {}).get("required"):
             raise RuntimeError("chat requirements requires arkose token, which is not implemented")
 
@@ -181,7 +182,7 @@ class OpenAIBackendAPI:
         )
 
     def _conversation_headers(self, path: str, requirements: ChatRequirements) -> Dict[str, str]:
-        """根据当前 requirements 构造对话 SSE 请求头。"""
+        """Build the conversation SSE request headers from the current requirements."""
         headers = {
             "Accept": "text/event-stream",
             "Content-Type": "application/json",
@@ -196,7 +197,7 @@ class OpenAIBackendAPI:
         return self._headers(path, headers)
 
     def _api_messages_to_conversation_messages(self, messages: list[Dict[str, Any]]) -> list[Dict[str, Any]]:
-        """把标准 chat messages 转成 web conversation 所需的 messages。"""
+        """Convert standard chat messages into the messages required by the web conversation."""
         conversation_messages = []
         for item in messages:
             content = item.get("content", "")
@@ -210,7 +211,7 @@ class OpenAIBackendAPI:
         return conversation_messages
 
     def _conversation_payload(self, messages: list[Dict[str, Any]], model: str, timezone: str) -> Dict[str, Any]:
-        """把标准 messages 构造成 web 对话请求体。"""
+        """Build the web conversation request body from standard messages."""
         return {
             "action": "next",
             "messages": self._api_messages_to_conversation_messages(messages),
@@ -243,7 +244,7 @@ class OpenAIBackendAPI:
         }
 
     def _image_model_slug(self, model: str) -> str:
-        """把标准图片模型名映射到底层 model slug。"""
+        """Map a standard image model name to the underlying model slug."""
         model = str(model or "").strip()
         if not model:
             return "auto"
@@ -251,7 +252,7 @@ class OpenAIBackendAPI:
 
     def _image_headers(self, path: str, requirements: ChatRequirements, conduit_token: str = "", accept: str = "*/*") -> \
             Dict[str, str]:
-        """构造图片链路请求头。"""
+        """Build the image pipeline request headers."""
         headers = {
             "Content-Type": "application/json",
             "Accept": accept,
@@ -266,7 +267,7 @@ class OpenAIBackendAPI:
         return self._headers(path, headers)
 
     def _prepare_image_conversation(self, prompt: str, requirements: ChatRequirements, model: str) -> str:
-        """为图片生成准备 conduit token。"""
+        """Prepare a conduit token for image generation."""
         path = "/backend-api/f/conversation/prepare"
         payload = {
             "action": "next",
@@ -297,7 +298,7 @@ class OpenAIBackendAPI:
         return response.json().get("conduit_token", "")
 
     def _decode_image_base64(self, image: str) -> bytes:
-        """把 base64 图片字符串或本地路径解码成二进制。"""
+        """Decode a base64 image string or local file path into bytes."""
         if (
                 image
                 and len(image) < 512
@@ -312,7 +313,7 @@ class OpenAIBackendAPI:
         return base64.b64decode(payload)
 
     def _upload_image(self, image: str, file_name: str = "image.png") -> Dict[str, Any]:
-        """上传一张 base64 图片，返回底层文件元数据。"""
+        """Upload a base64 image and return the underlying file metadata."""
         data = self._decode_image_base64(image)
         if (
                 image
@@ -373,7 +374,7 @@ class OpenAIBackendAPI:
 
     def _start_image_generation(self, prompt: str, requirements: ChatRequirements, conduit_token: str, model: str,
                                 references: Optional[list[Dict[str, Any]]] = None) -> requests.Response:
-        """启动图片生成或编辑的 SSE 请求。"""
+        """Start the SSE request for image generation or editing."""
         references = references or []
         parts = [{
             "content_type": "image_asset_pointer",
@@ -445,7 +446,7 @@ class OpenAIBackendAPI:
         return response
 
     def _get_conversation(self, conversation_id: str) -> Dict[str, Any]:
-        """获取完整 conversation 详情。"""
+        """Fetch the full conversation details."""
         path = f"/backend-api/conversation/{conversation_id}"
         response = self.session.get(self.base_url + path, headers=self._headers(path, {"Accept": "application/json"}),
                                     timeout=60)
@@ -453,7 +454,7 @@ class OpenAIBackendAPI:
         return response.json()
 
     def _extract_image_tool_records(self, data: Dict[str, Any]) -> list[Dict[str, Any]]:
-        """从 conversation 明细里提取图片工具输出记录。"""
+        """Extract image tool output records from the conversation details."""
         mapping = data.get("mapping") or {}
         file_pat = re.compile(r"file-service://([A-Za-z0-9_-]+)")
         sed_pat = re.compile(r"sediment://([A-Za-z0-9_-]+)")
@@ -485,7 +486,7 @@ class OpenAIBackendAPI:
         return sorted(records, key=lambda item: item["create_time"])
 
     def _poll_image_results(self, conversation_id: str, timeout_secs: float = 120.0) -> tuple[list[str], list[str]]:
-        """轮询 conversation，直到拿到图片文件 id 或超时。"""
+        """Poll the conversation until image file ids are available or the timeout is reached."""
         start = time.time()
         attempt = 0
         logger.info({"event": "image_poll_start", "conversation_id": conversation_id, "timeout_secs": timeout_secs})
@@ -513,7 +514,7 @@ class OpenAIBackendAPI:
         return [], []
 
     def _get_file_download_url(self, file_id: str) -> str:
-        """获取文件下载地址。"""
+        """Get the file download URL."""
         path = f"/backend-api/files/{file_id}/download"
         response = self.session.get(self.base_url + path, headers=self._headers(path, {"Accept": "application/json"}),
                                     timeout=60)
@@ -522,7 +523,7 @@ class OpenAIBackendAPI:
         return data.get("download_url") or data.get("url") or ""
 
     def _get_attachment_download_url(self, conversation_id: str, attachment_id: str) -> str:
-        """通过 conversation 附件接口获取下载地址。"""
+        """Get the download URL via the conversation attachment endpoint."""
         path = f"/backend-api/conversation/{conversation_id}/attachment/{attachment_id}/download"
         response = self.session.get(self.base_url + path, headers=self._headers(path, {"Accept": "application/json"}),
                                     timeout=60)
@@ -531,7 +532,7 @@ class OpenAIBackendAPI:
         return data.get("download_url") or data.get("url") or ""
 
     def _resolve_image_urls(self, conversation_id: str, file_ids: list[str], sediment_ids: list[str]) -> list[str]:
-        """把图片结果 id 解析成可下载 URL。"""
+        """Resolve image result ids into downloadable URLs."""
         urls = []
         skip_patterns = {"file_upload"}
         for file_id in file_ids:
@@ -676,7 +677,7 @@ class OpenAIBackendAPI:
             response.close()
 
     def _bootstrap(self) -> None:
-        """预热首页，并提取 PoW 相关脚本引用。"""
+        """Warm up the homepage and extract PoW-related script references."""
         response = self.session.get(
             self.base_url + "/",
             headers=self._bootstrap_headers(),
@@ -688,7 +689,7 @@ class OpenAIBackendAPI:
             self.pow_script_sources = [DEFAULT_POW_SCRIPT]
 
     def _get_chat_requirements(self) -> ChatRequirements:
-        """获取当前模式对话所需的 sentinel token。"""
+        """Get the sentinel tokens required for conversation in the current mode."""
         path = "/backend-api/sentinel/chat-requirements" if self.access_token else "/backend-anon/sentinel/chat-requirements"
         context = "auth_chat_requirements" if self.access_token else "noauth_chat_requirements"
         body = {"p": build_legacy_requirements_token(self.user_agent, self.pow_script_sources, self.pow_data_build)}
@@ -711,7 +712,7 @@ class OpenAIBackendAPI:
         return "/backend-anon/conversation", "America/Los_Angeles"
 
     def list_models(self) -> Dict[str, Any]:
-        """返回当前模式下可用模型，格式对齐 OpenAI `/v1/models`。"""
+        """Return the models available in the current mode, formatted like OpenAI `/v1/models`."""
         self._bootstrap()
         path = "/backend-api/models?history_and_training_disabled=false" if self.access_token else (
             "/backend-anon/models?iim=false&is_gizmo=false"

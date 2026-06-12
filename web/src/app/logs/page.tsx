@@ -29,9 +29,9 @@ const LogStatus = {
 } as const;
 
 const typeLabels: Record<string, string> = {
-  [LogType.Call]: "调用日志",
-  [LogType.Account]: "账号管理日志",
-  [LogType.Audit]: "审计日志",
+  [LogType.Call]: "Call Logs",
+  [LogType.Account]: "Account Logs",
+  [LogType.Audit]: "Audit Logs",
 };
 
 function getDetailText(item: SystemLog, key: string) {
@@ -60,8 +60,8 @@ function getUrls(item: SystemLog | null) {
 
 function getStatus(item: SystemLog) {
   const status = item.detail?.status;
-  if (status === "success") return "成功";
-  if (status === "failed") return "失败";
+  if (status === "success") return "Success";
+  if (status === "failed") return "Failed";
   return "-";
 }
 
@@ -104,7 +104,7 @@ function LogsContent() {
       setPage(data.page || nextPage);
       setPageCount(data.page_count || 1);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "加载日志失败");
+      toast.error(error instanceof Error ? error.message : "Failed to load logs");
     } finally {
       setIsLoading(false);
     }
@@ -131,40 +131,40 @@ function LogsContent() {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="space-y-1">
           <div className="text-xs font-semibold tracking-[0.18em] text-stone-500 uppercase">Logs</div>
-          <h1 className="text-2xl font-semibold tracking-tight">日志管理</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Log Management</h1>
         </div>
         <div className="flex flex-wrap gap-2">
           <Select value={type} onValueChange={setType}>
             <SelectTrigger className="h-10 w-[150px] rounded-xl border-stone-200 bg-white"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value={LogType.Call}>调用日志</SelectItem>
-              <SelectItem value={LogType.Account}>账号管理日志</SelectItem>
-              <SelectItem value={LogType.Audit}>审计日志</SelectItem>
+              <SelectItem value={LogType.Call}>Call Logs</SelectItem>
+              <SelectItem value={LogType.Account}>Account Logs</SelectItem>
+              <SelectItem value={LogType.Audit}>Audit Logs</SelectItem>
             </SelectContent>
           </Select>
           {isCallLog ? (
             <Select value={status} onValueChange={setStatus}>
               <SelectTrigger className="h-10 w-[120px] rounded-xl border-stone-200 bg-white"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value={LogStatus.All}>全部状态</SelectItem>
-                <SelectItem value={LogStatus.Success}>成功</SelectItem>
-                <SelectItem value={LogStatus.Failed}>失败</SelectItem>
+                <SelectItem value={LogStatus.All}>All Statuses</SelectItem>
+                <SelectItem value={LogStatus.Success}>Success</SelectItem>
+                <SelectItem value={LogStatus.Failed}>Failed</SelectItem>
               </SelectContent>
             </Select>
           ) : null}
           <Input
             value={userQuery}
             onChange={(event) => setUserQuery(event.target.value)}
-            placeholder="用户邮箱/昵称/ID"
+            placeholder="UserEmail/Nickname/ID"
             className="h-10 w-52 rounded-xl border-stone-200 bg-white"
           />
           <DateRangeFilter startDate={startDate} endDate={endDate} onChange={(start, end) => { setStartDate(start); setEndDate(end); }} />
           <Button variant="outline" onClick={clearFilters} className="h-10 rounded-xl border-stone-200 bg-white px-4 text-stone-700">
-            清除筛选条件
+            Clear Filters
           </Button>
           <Button onClick={() => void loadLogs()} disabled={isLoading} className="h-10 rounded-xl bg-stone-950 px-4 text-white hover:bg-stone-800">
             {isLoading ? <LoaderCircle className="size-4 animate-spin" /> : <Search className="size-4" />}
-            查询
+            Search
           </Button>
         </div>
       </div>
@@ -172,23 +172,23 @@ function LogsContent() {
       <Card className="overflow-hidden rounded-lg border-white/80 bg-white/80 shadow-sm">
         <CardContent className="p-0">
           <div className="flex items-center justify-between border-b border-stone-100 px-5 py-4 text-sm text-stone-600">
-            <span>共 {total} 条</span>
+            <span>Total {total} items</span>
             <Button variant="ghost" className="h-8 rounded-lg px-3 text-stone-500" onClick={() => void loadLogs()} disabled={isLoading}>
               <RefreshCw className={`size-4 ${isLoading ? "animate-spin" : ""}`} />
-              刷新
+              Refresh
             </Button>
           </div>
           <div className="overflow-x-auto">
             <Table className="min-w-[820px]">
               <TableHeader>
                 <TableRow>
-                  <TableHead>时间</TableHead>
-                  <TableHead>类型</TableHead>
-                  {isCallLog ? <TableHead>用户/令牌</TableHead> : null}
-                  {isCallLog ? <TableHead>调用耗时</TableHead> : null}
-                  {isCallLog ? <TableHead>状态</TableHead> : null}
-                  <TableHead>简述</TableHead>
-                  <TableHead className="w-28">详情</TableHead>
+                  <TableHead>Time</TableHead>
+                  <TableHead>Type</TableHead>
+                  {isCallLog ? <TableHead>User / Token</TableHead> : null}
+                  {isCallLog ? <TableHead>Latency</TableHead> : null}
+                  {isCallLog ? <TableHead>Status</TableHead> : null}
+                  <TableHead>Summary</TableHead>
+                  <TableHead className="w-28">Details</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -208,7 +208,7 @@ function LogsContent() {
                     <TableCell className="max-w-[420px] truncate text-stone-500">{item.summary || "-"}</TableCell>
                     <TableCell>
                       <Button variant="ghost" className="h-8 rounded-lg px-3 text-stone-600" onClick={() => openDetail(item)}>
-                        查看详情
+                        View Details
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -217,7 +217,7 @@ function LogsContent() {
             </Table>
           </div>
           <div className="flex items-center justify-end gap-2 border-t border-stone-100 px-4 py-3 text-sm text-stone-500">
-            <span>第 {safePage} / {pageCount} 页，共 {total} 条</span>
+            <span>Page {safePage} / {pageCount} of {total} items</span>
             <Button variant="outline" size="icon" className="size-9 rounded-lg border-stone-200 bg-white" disabled={safePage <= 1} onClick={() => void loadLogs(Math.max(1, safePage - 1))}>
               <ChevronLeft className="size-4" />
             </Button>
@@ -225,13 +225,13 @@ function LogsContent() {
               <ChevronRight className="size-4" />
             </Button>
           </div>
-          {!isLoading && items.length === 0 ? <div className="px-6 py-14 text-center text-sm text-stone-500">没有找到日志</div> : null}
+          {!isLoading && items.length === 0 ? <div className="px-6 py-14 text-center text-sm text-stone-500">No logs found</div> : null}
         </CardContent>
       </Card>
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
         <DialogContent className="w-[min(92vw,920px)] rounded-2xl p-6">
           <DialogHeader>
-            <DialogTitle>日志详情</DialogTitle>
+            <DialogTitle>Log Details</DialogTitle>
           </DialogHeader>
           <div className="grid gap-3 rounded-xl border border-stone-200 bg-white p-4 text-sm text-stone-600 md:grid-cols-2">
             {Object.entries(detailLog?.detail || {})
