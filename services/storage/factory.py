@@ -7,6 +7,7 @@ from pathlib import Path
 from urllib.parse import quote, unquote
 
 from services.storage.base import StorageBackend
+from services.storage.d1_storage import D1StorageBackend
 from services.storage.database_storage import DatabaseStorageBackend
 from services.storage.git_storage import GitStorageBackend
 from services.storage.json_storage import JSONStorageBackend
@@ -17,7 +18,7 @@ def create_storage_backend(data_dir: Path, settings: Mapping[str, object] | None
     Create the storage backend based on environment variables or config.json
     
     Environment variables take precedence; when unset, config.json in the project root is read:
-    - STORAGE_BACKEND: json|sqlite|postgres|git (default json)
+    - STORAGE_BACKEND: json|sqlite|postgres|git|d1 (default json)
     - DATABASE_URL: database connection string (for sqlite/postgres)
     - GIT_REPO_URL: Git repository URL (for git)
     - GIT_TOKEN: Git access token (for git)
@@ -51,6 +52,41 @@ def create_storage_backend(data_dir: Path, settings: Mapping[str, object] | None
         
         return DatabaseStorageBackend(database_url)
     
+    elif backend_type in ("d1", "cloudflare", "cloudflare_d1"):
+        # Cloudflare D1 storage (HTTP REST API)
+        account_id = _get_setting("D1_ACCOUNT_ID", "", resolved_settings)
+        database_id = _get_setting("D1_DATABASE_ID", "", resolved_settings)
+        api_token = _get_setting("D1_API_TOKEN", "", resolved_settings)
+        table_name = _get_setting("D1_TABLE_NAME", "storage_kv", resolved_settings)
+        api_base = _get_setting(
+            "D1_API_BASE", "https://api.cloudflare.com/client/v4", resolved_settings
+        )
+
+        missing = [
+            name
+            for name, value in (
+                ("D1_ACCOUNT_ID", account_id),
+                ("D1_DATABASE_ID", database_id),
+                ("D1_API_TOKEN", api_token),
+            )
+            if not value
+        ]
+        if missing:
+            raise ValueError(
+                "Cloudflare D1 storage backend requires: "
+                + ", ".join(missing)
+                + ". Please set these environment variables."
+            )
+
+        print(f"[storage] Using Cloudflare D1 storage: database={database_id}, table={table_name}")
+        return D1StorageBackend(
+            account_id=account_id,
+            database_id=database_id,
+            api_token=api_token,
+            table_name=table_name,
+            api_base=api_base,
+        )
+
     elif backend_type == "git":
         # Git repository storage
         repo_url = _get_setting("GIT_REPO_URL", "", resolved_settings)
@@ -92,7 +128,7 @@ def create_storage_backend(data_dir: Path, settings: Mapping[str, object] | None
     else:
         raise ValueError(
             f"Unknown storage backend: {backend_type}. "
-            f"Supported backends: json, sqlite, postgres, git"
+            f"Supported backends: json, sqlite, postgres, git, d1"
         )
 
 

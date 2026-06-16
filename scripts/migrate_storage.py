@@ -546,7 +546,7 @@ Examples:
   python scripts/migrate_storage.py --import backup.json
 
 Environment variables:
-  STORAGE_BACKEND  - Storage backend type (json, sqlite, postgres, git)
+  STORAGE_BACKEND  - Storage backend type (json, sqlite, postgres, git, d1)
   DATABASE_URL     - Database connection string
   GIT_REPO_URL     - Git repository URL
   GIT_TOKEN        - Git access token
@@ -556,13 +556,13 @@ Environment variables:
     parser.add_argument(
         "--from",
         dest="from_backend",
-        choices=["json", "sqlite", "postgres", "git"],
+        choices=["json", "sqlite", "postgres", "git", "d1"],
         help="Source storage backend",
     )
     parser.add_argument(
         "--to",
         dest="to_backend",
-        choices=["json", "sqlite", "postgres", "git"],
+        choices=["json", "sqlite", "postgres", "git", "d1"],
         help="Target storage backend",
     )
     parser.add_argument(
