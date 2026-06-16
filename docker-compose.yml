@@ -1,6 +1,6 @@
 services:
   app:
-    image: ${YANAI_IMAGE:-huaiyuechusan/yanai:latest}
+    build : .
     container_name: yanai
     restart: unless-stopped
     ports:
